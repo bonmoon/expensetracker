@@ -1688,3 +1688,59 @@ canvas#pieChart {
     bottom: 28%;
   }
 }
+
+/* ===== MOBILE PERFORMANCE OPTIMIZATIONS ===== */
+@media (max-width: 768px) {
+  /* Reduce blur and filter effects on mobile */
+  .launch-backdrop {
+    filter: blur(6px) saturate(0.96) !important;
+  }
+
+  .launch-card-glow {
+    filter: blur(8px) !important;
+    animation: none !important;
+  }
+
+  /* Disable expensive animations */
+  * {
+    animation-duration: 0.2s !important;
+  }
+
+  /* Optimize shadows for lower-end devices */
+  .shadow-gold {
+    box-shadow: 0 0 8px rgba(216,186,115,0.12) !important;
+  }
+
+  /* Reduce parallax motion on mobile */
+  body.launch-running .launch-backdrop {
+    transform: scale(1.02) !important;
+  }
+
+  /* Optimize video rendering */
+  #char-video {
+    will-change: auto;
+    transform: translateZ(0) !important;
+  }
+
+  /* Disable expensive text effects */
+  .butler-dialog-text .typing-char {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Very aggressive mobile optimization for low-end phones */
+@media (max-width: 480px) {
+  .launch-backdrop {
+    filter: none !important;
+  }
+
+  .launch-card-glow {
+    display: none !important;
+  }
+
+  /* Reduce all transitions */
+  * {
+    transition: none !important;
+  }
+}

@@ -54,16 +54,24 @@ const Parallax = {
       }
     }
 
-    // 鼠标
+    // 鼠标 - throttled for mobile performance
+    let lastMouseUpdate = 0;
     window.addEventListener('mousemove', e => {
+      const now = Date.now();
+      if (now - lastMouseUpdate < 32) return; // throttle to ~30fps
+      lastMouseUpdate = now;
       this.tgtX = (e.clientX - this.cx) * 0.4;
       this.tgtY = (e.clientY - this.cy) * 0.4;
       this.bump();
     });
 
-    // 触摸
+    // 触摸 - throttled for mobile performance
+    let lastTouchUpdate = 0;
     window.addEventListener('touchmove', e => {
       if (!e.touches[0]) return;
+      const now = Date.now();
+      if (now - lastTouchUpdate < 48) return; // throttle to ~20fps on touch
+      lastTouchUpdate = now;
       this.tgtX = (e.touches[0].clientX - this.cx) * 0.35;
       this.tgtY = (e.touches[0].clientY - this.cy) * 0.35;
       this.bump();

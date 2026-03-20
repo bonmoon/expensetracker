@@ -68,16 +68,16 @@ const App = {
   },
 
   setupLaunchAudio() {
-    this.launchAudio = new Audio('applaunch.mp3');
-    this.launchAudio.loop = false;
-    this.launchAudio.preload = 'auto';
-    this.launchAudio.volume = 0.72;
+    // Use AudioManager to control audio - prevents loops
+    if (window.AudioManager) {
+      window.AudioManager.getAudio('launch', 'applaunch.mp3');
+    }
   },
 
   playLaunchAudio() {
-    if (!this.launchAudio) return;
-    this.launchAudio.currentTime = 0;
-    this.launchAudio.play().catch(() => {});
+    if (window.AudioManager) {
+      window.AudioManager.play('launch', 'applaunch.mp3', 0.72).catch(() => {});
+    }
   },
 
   startLaunchSequence() {

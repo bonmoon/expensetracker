@@ -225,6 +225,13 @@ const Character = {
     this.videoEl.addEventListener('loadeddata', () => this.setVideoMode(true));
     this.videoEl.addEventListener('canplay', () => this.setVideoMode(true));
     this.videoEl.addEventListener('error', () => this.setVideoMode(false));
+    // Prevent video from auto-looping - stop at end
+    this.videoEl.addEventListener('ended', () => {
+      if (this.videoEl) {
+        this.videoEl.currentTime = 0;
+        this.videoEl.pause();
+      }
+    });
   },
 
   activateDeferredVideo() {
