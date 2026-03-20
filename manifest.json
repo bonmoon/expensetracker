@@ -1,0 +1,22 @@
+{
+  "name": "財務執事",
+  "short_name": "財務執事",
+  "description": "您的专属财务管家",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a0d06",
+  "theme_color": "#c9a84c",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "images/icons/appicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "images/icons/appicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

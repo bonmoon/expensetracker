@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="財務執事">
+  <meta name="theme-color" content="#1a0d06">
+  <title>財務執事</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="images/icons/appicon.png">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div id="app">
+  <div id="launch-overlay" class="launch-overlay" aria-live="polite">
+    <div class="launch-backdrop"></div>
+    <div class="launch-card-stage">
+      <div class="launch-card-glow"></div>
+      <img id="launch-card-image" class="launch-card-image" src="images/taroteye1.png" alt="Tarot launch card">
+    </div>
+    <div class="launch-wordmark">
+      <div class="launch-title">BUTLER LEDGER</div>
+      <div class="launch-subtitle">Moonlit Fortune Awakens</div>
+    </div>
+    <button class="launch-skip" type="button" onclick="App.skipLaunchSequence()">Skip</button>
+  </div>
+
+  <!-- ===== HOME SCREEN ===== -->
+  <div id="screen-home" class="screen active">
+    <div class="home-top-actions">
+      <div class="character-switcher" id="character-switcher" aria-label="角色切换"></div>
+      <button id="settings-btn" onclick="App.navigate('settings')" aria-label="设置">
+        <img src="images/icons/setting-icon.png" alt="">
+      </button>
+    </div>
+    <div class="parallax-container">
+      <div class="parallax-layer" id="layer-bg"></div>
+      <div class="parallax-layer" id="layer-stars"></div>
+      <div class="char-video-layer" id="char-video-layer">
+        <video id="char-video" autoplay loop muted playsinline preload="metadata"></video>
+      </div>
+      <div class="char-glow" id="char-glow"></div>
+      <div class="content-layer" id="layer-char">
+        <img src="images/characters/aaron/Aaron1.png" alt="">
+      </div>
+      <div class="content-layer" id="layer-raven">
+        <img alt="">
+      </div>
+      <div class="content-layer" id="layer-book">
+        <img alt="">
+      </div>
+    </div>
+    <div class="home-overlay">
+      <div class="home-title-area">
+        <div class="home-app-name">財務執事</div>
+        <div class="home-tagline">BUTLER LEDGER</div>
+      </div>
+      <!-- 中间台词区：浮动在视觉图中央 -->
+      <div class="home-center-quote">
+        <div class="greeting-text" id="greeting-text">早安，主人。</div>
+      </div>
+      <div class="home-bottom">
+        <div class="home-balance-card">
+          <div class="balance-label">本月结余</div>
+          <div class="balance-amount"><span class="balance-currency">¥</span><span id="home-balance">0</span></div>
+          <div class="balance-meta">
+            <span class="balance-in"  id="home-income">↑ ¥0</span>
+            <span class="balance-out" id="home-expense">↓ ¥0</span>
+          </div>
+        </div>
+        <div class="home-quick-actions">
+          <div class="quick-action-btn" onclick="App.navigate('quick')">
+            <span class="quick-action-icon"><img src="images/icons/quick.png" alt=""></span>
+            <span class="quick-action-label">快速记账</span>
+          </div>
+          <div class="quick-action-btn" onclick="App.navigate('ai')">
+            <span class="quick-action-icon"><img src="images/icons/ai.png" alt=""></span>
+            <span class="quick-action-label">AI 记账</span>
+          </div>
+          <div class="quick-action-btn" onclick="App.navigate('charts')">
+            <span class="quick-action-icon"><img src="images/icons/chart.png" alt=""></span>
+            <span class="quick-action-label">收支分析</span>
+          </div>
+          <div class="quick-action-btn" onclick="App.navigate('savings')">
+            <span class="quick-action-icon"><img src="images/icons/savings.png" alt=""></span>
+            <span class="quick-action-label">储蓄目标</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== QUICK RECORD SCREEN ===== -->
+  <div id="screen-quick" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="App.goBack()">←</button>
+      <img src="images/icons/quick.png" alt="">
+      <h2>快速记账</h2>
+    </div>
+    <div class="screen-inner">
+      <div class="amount-display">
+        <div class="amount-type-toggle">
+          <button class="type-btn expense active" onclick="App.setType('expense')">支出</button>
+          <button class="type-btn income"  onclick="App.setType('income')">收入</button>
+        </div>
+        <div class="amount-number expense" id="amount-number">¥ 0</div>
+        <!-- 日期选择 -->
+        <div style="margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <span style="font-size:11px;color:rgba(245,234,216,0.6);font-family:var(--font-display);letter-spacing:1px;">日期</span>
+          <input type="date" id="quick-date"
+            style="background:rgba(255,255,255,0.08);border:1px solid rgba(201,168,76,0.3);
+            border-radius:8px;color:var(--gold-light);padding:4px 10px;
+            font-family:var(--font-display);font-size:12px;outline:none;
+            color-scheme:dark;">
+        </div>
+      </div>
+      <div class="category-grid" id="cat-grid"></div>
+      <input class="note-input" id="quick-note" type="text" placeholder="备注（选填）…" maxlength="30">
+      <div class="numpad">
+        <button class="num-btn" onclick="App.numInput('1')">1</button>
+        <button class="num-btn" onclick="App.numInput('2')">2</button>
+        <button class="num-btn" onclick="App.numInput('3')">3</button>
+        <button class="num-btn" onclick="App.numInput('4')">4</button>
+        <button class="num-btn" onclick="App.numInput('5')">5</button>
+        <button class="num-btn" onclick="App.numInput('6')">6</button>
+        <button class="num-btn" onclick="App.numInput('7')">7</button>
+        <button class="num-btn" onclick="App.numInput('8')">8</button>
+        <button class="num-btn" onclick="App.numInput('9')">9</button>
+        <button class="num-btn" onclick="App.numInput('.')">.</button>
+        <button class="num-btn zero-btn" onclick="App.numInput('0')">0</button>
+        <button class="num-btn del-btn" onclick="App.numDelete()">⌫</button>
+      </div>
+      <button class="btn-submit" onclick="App.submitRecord()">记 录</button>
+    </div>
+  </div>
+
+  <!-- ===== AI CHAT SCREEN ===== -->
+  <div id="screen-ai" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="App.goBack()">←</button>
+      <img src="images/icons/ai.png" alt="">
+      <h2>AI 记账</h2>
+    </div>
+    <!-- 角色头像区 -->
+    <div class="ai-character-bar">
+      <div class="ai-char-avatar" id="ai-char-avatar"></div>
+      <div class="ai-char-info">
+        <div class="ai-char-name" id="ai-char-name">Aaron</div>
+        <div class="ai-char-title" id="ai-char-title">財務執事</div>
+      </div>
+    </div>
+    <div class="screen-inner" style="display:flex;flex-direction:column;overflow:hidden;background:var(--brown-deep);">
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-area">
+        <textarea class="chat-input" id="chat-input"
+          placeholder="告诉执事您的收支…"
+          rows="1"
+          onkeydown="App.handleChatKey(event)"></textarea>
+        <button class="btn-send" onclick="App.sendChat()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CHARTS SCREEN ===== -->
+  <div id="screen-charts" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="App.goBack()">←</button>
+      <img src="images/icons/chart.png" alt="">
+      <h2>收支分析</h2>
+    </div>
+    <div class="screen-inner">
+      <div class="chart-period-selector" id="period-selector"></div>
+      <div class="summary-row" id="summary-stats"></div>
+
+      <div class="chart-card">
+        <h3>分类支出</h3>
+        <div class="bar-chart" id="bar-chart"></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>支出占比</h3>
+        <div class="pie-chart-container">
+          <canvas id="pieChart" width="130" height="130"></canvas>
+          <div class="pie-legend" id="pie-legend"></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>最近记录</h3>
+        <div class="recent-list" id="recent-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SAVINGS SCREEN ===== -->
+  <div id="screen-savings" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="App.goBack()">←</button>
+      <img src="images/icons/savings.png" alt="">
+      <h2>梦想储蓄罐</h2>
+    </div>
+    <div class="screen-inner">
+      <div class="savings-jar-hero">
+        <div class="savings-jar-backdrop"></div>
+        <div class="savings-jar-copy">
+          <div class="savings-hero-title">Moonlight Treasury</div>
+          <div class="savings-hero-text">把每一笔积累都放进你的梦想储蓄罐里，让目标慢慢发光。</div>
+        </div>
+        <img src="images/icons/savings.png" class="jar-img" alt="">
+      </div>
+      <button class="btn-add-goal" onclick="App.showAddGoalModal()">+ 新增储蓄目标</button>
+      <div id="goals-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS SCREEN ===== -->
+  <div id="screen-settings" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="App.goBack()">←</button>
+      <img src="images/icons/setting-icon.png" alt="">
+      <h2>设置</h2>
+    </div>
+    <div class="screen-inner" style="padding:20px;background:linear-gradient(180deg,#f5f6fb,#e6ebf5);overflow-y:auto;">
+
+      <!-- AI 服务商 -->
+      <div class="chart-card">
+        <h3>AI 记账服务商</h3>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;font-style:italic;">
+          选择您的 AI 服务商，填入对应 API Key。
+        </p>
+        <select id="ai-provider-select" class="note-input" style="margin-bottom:10px;" onchange="App.onProviderChange()">
+          <option value="gemini">Google Gemini（免费额度）</option>
+          <option value="deepseek">DeepSeek（推荐·超便宜）</option>
+          <option value="groq">Groq（免费·快速）</option>
+          <option value="openrouter">OpenRouter（多模型）</option>
+        </select>
+        <div id="provider-hint" style="font-size:12px;color:var(--gold-dark);margin-bottom:10px;font-style:italic;padding:8px 12px;background:rgba(201,168,76,0.1);border-radius:8px;border-left:3px solid var(--gold);"></div>
+        <input class="note-input" id="api-key-input" type="password" placeholder="输入 API Key…">
+        <button class="btn-submit" style="margin-top:8px;" onclick="App.saveApiKey()">保 存 Key</button>
+      </div>
+
+      <!-- Google Sheets -->
+      <div class="chart-card" style="margin-top:14px;">
+        <h3>Google Sheets 同步</h3>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div id="sheets-status-dot" style="width:8px;height:8px;border-radius:50%;background:#aaa;flex-shrink:0;"></div>
+          <span id="sheets-status-text" style="font-size:12px;color:var(--text-secondary);font-style:italic;">检查中…</span>
+        </div>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;font-style:italic;">
+          每次记账自动同步到您的 Google Sheet，数据永不丢失。
+        </p>
+        <input class="note-input" id="sheets-url-input" type="text" placeholder="Apps Script Web App URL（已内置）" style="font-size:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+          <button class="btn-submit" onclick="App.saveSheetsUrl()" style="font-size:12px;letter-spacing:1px;">保存 URL</button>
+          <button class="btn-submit" onclick="App.syncAllToSheets()" style="background:linear-gradient(135deg,#2a5a35,#4a9a60);font-size:12px;letter-spacing:1px;" id="btn-sync-all">全量同步↑</button>
+        </div>
+        <button class="btn-submit" onclick="App.restoreFromSheets()"
+          style="margin-top:8px;width:100%;background:linear-gradient(135deg,#1a3a5a,#2a6a9a);font-size:12px;letter-spacing:1px;"
+          id="btn-restore">从 Sheets 恢复记录↓</button>
+        <p style="font-size:11px;color:var(--text-secondary);margin-top:8px;font-style:italic;">
+          换手机或清除缓存后，点此从云端恢复所有历史记录。
+        </p>
+      </div>
+
+      <!-- 数据管理 -->
+      <div class="chart-card" style="margin-top:14px;">
+        <h3>数据管理</h3>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;font-style:italic;">
+          导出本地全部数据为 JSON 备份文件。
+        </p>
+        <button class="btn-submit" onclick="App.exportData()" style="margin-bottom:8px;">导出 JSON 备份</button>
+        <button class="btn-submit" onclick="App.clearChatHistory()"
+          style="background:linear-gradient(135deg,#3a2a10,#6a4a20);font-size:12px;letter-spacing:1px;">
+          清空 AI 对话记录
+        </button>
+      </div>
+
+      <!-- 关于 -->
+      <div class="chart-card" style="margin-top:14px;margin-bottom:40px;">
+        <h3>关于</h3>
+        <p style="font-size:14px;color:var(--text-secondary);line-height:1.8;">
+          財務執事 v1.1<br>
+          您的专属财务管家<br>
+          <span style="font-style:italic;opacity:0.7;">本地存储 · Sheets云备份 · AI智能记账</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ADD GOAL MODAL ===== -->
+  <div class="modal-overlay" id="modal-goal" onclick="event.target===this&&App.closeModal('modal-goal')">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">新增储蓄目标</div>
+      <div class="modal-emoji-row" id="goal-emoji-row"></div>
+      <input class="modal-input" id="goal-name-input" type="text" placeholder="目标名称（如：旅行基金）" maxlength="20">
+      <input class="modal-input" id="goal-target-input" type="number" placeholder="目标金额" min="1">
+      <input class="modal-input" id="goal-deadline-input" type="month" placeholder="目标日期（选填）">
+      <button class="btn-submit" onclick="App.saveNewGoal()">创 建</button>
+    </div>
+  </div>
+
+  <!-- ===== 编辑记录弹窗 ===== -->
+  <div class="modal-overlay" id="modal-edit-record" onclick="event.target===this&&App.closeModal('modal-edit-record')">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">编辑记录</div>
+      <input type="hidden" id="edit-record-id">
+      <!-- 收支类型 -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="type-btn expense active" id="edit-type-expense" onclick="App.setEditType('expense')">支出</button>
+        <button class="type-btn income" id="edit-type-income" onclick="App.setEditType('income')">收入</button>
+      </div>
+      <!-- 金额 -->
+      <input class="modal-input" id="edit-amount" type="number" placeholder="金额" min="0" step="0.01">
+      <!-- 分类 -->
+      <select class="modal-input" id="edit-category" style="appearance:auto;">
+        <option value="餐饮">🍜 餐饮</option>
+        <option value="购物">🛍️ 购物</option>
+        <option value="交通">🚗 交通</option>
+        <option value="娱乐">🎮 娱乐</option>
+        <option value="医疗">💊 医疗</option>
+        <option value="居住">🏠 居住</option>
+        <option value="教育">📚 教育</option>
+        <option value="工资">💼 工资</option>
+        <option value="副业">💡 副业</option>
+        <option value="投资">📈 投资</option>
+        <option value="礼金">🎁 礼金</option>
+        <option value="其他">💸 其他</option>
+      </select>
+      <!-- 备注 -->
+      <input class="modal-input" id="edit-note" type="text" placeholder="备注（选填）" maxlength="30">
+      <!-- 日期 -->
+      <input class="modal-input" id="edit-date" type="date">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+        <button class="btn-submit" onclick="App.saveEditRecord()" style="letter-spacing:2px;">保 存</button>
+        <button class="btn-submit" onclick="App.deleteRecordFromEdit()"
+          style="background:linear-gradient(135deg,#6a1a1a,#c04040);letter-spacing:2px;">删 除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST ===== -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ===== 执事对话框 ===== -->
+  <div class="butler-dialog" id="butler-dialog">
+    <div class="butler-dialog-inner">
+      <div class="butler-dialog-avatar" id="butler-avatar"></div>
+      <div class="butler-dialog-name" id="butler-dialog-name">執事</div>
+      <div class="butler-dialog-text" id="butler-dialog-text"></div>
+      <button class="butler-dialog-close" onclick="ButlerDialog.hide()">✕</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/db.js"></script>
+<script src="js/sheets.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/parallax.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/character.js"></script>
+<script src="js/butler-dialog.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
