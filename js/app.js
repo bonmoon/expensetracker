@@ -108,19 +108,37 @@ const App = {
       overlay.classList.add('hidden');
       return;
     }
+    image.src = frames[0];
+  },
+
+  beginLaunchSequence() {
+    if (this.isLaunchRunning) return;
+
+    const overlay = document.getElementById('launch-overlay');
+    const image = document.getElementById('launch-card-image');
+    if (!overlay || !image) return;
+
+    const frames = Character.getLaunchFrames();
+    const reveal = Character.getLaunchRevealImage();
+    if (!frames.length || !reveal) {
+      overlay.classList.add('hidden');
+      this.finishLaunchSequence();
+      return;
+    }
 
     this.isLaunchRunning = true;
+    overlay.classList.add('running');
     document.body.classList.add('launch-running');
     image.src = frames[0];
     this.playLaunchAudio();
 
-    this.queueLaunchStep(() => this.playLaunchFrames(frames, 1), 420);
+    this.queueLaunchStep(() => this.playLaunchFrames(frames, 1), 120);
     this.queueLaunchStep(() => {
       overlay.classList.add('reveal-character');
       image.src = reveal;
-    }, 1320);
-    this.queueLaunchStep(() => overlay.classList.add('hidden'), 2220);
-    this.queueLaunchStep(() => this.finishLaunchSequence(), 2920);
+    }, 1020);
+    this.queueLaunchStep(() => overlay.classList.add('hidden'), 1900);
+    this.queueLaunchStep(() => this.finishLaunchSequence(), 2580);
   },
 
   playLaunchFrames(frames, startIndex = 0) {
@@ -150,7 +168,10 @@ const App = {
     document.body.classList.remove('launch-running');
 
     const overlay = document.getElementById('launch-overlay');
-    if (overlay) overlay.style.display = 'none';
+    if (overlay) {
+      overlay.classList.remove('running', 'reveal-character');
+      overlay.style.display = 'none';
+    }
   },
 
   queueLaunchStep(fn, delay) {

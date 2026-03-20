@@ -1,4 +1,4 @@
-const CACHE_NAME = 'butler-finance-v4';
+const CACHE_NAME = 'butler-finance-v5';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -11,19 +11,7 @@ const APP_SHELL = [
   '/js/charts.js',
   '/js/parallax.js',
   '/js/butler-dialog.js',
-  '/applaunch.mp3',
-  '/images/characters/aaron/Aaron1.png',
-  '/images/characters/aaron/Aaron2.PNG',
-  '/images/characters/aaron/video.mp4',
-  '/images/savingbackground.png',
-  '/images/taroteye1.png',
-  '/images/taroteye2.png',
-  '/images/taroteye3.png',
-  '/images/taroteye4.png',
-  '/images/taroteye5.png',
-  '/images/taroteye6.png',
   '/images/icons/appicon.png',
-  '/images/icons/app-icon.png',
   '/images/icons/quick.png',
   '/images/icons/ai.png',
   '/images/icons/chart.png',

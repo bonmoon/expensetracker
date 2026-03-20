@@ -148,6 +148,26 @@ html, body {
   backdrop-filter: blur(10px);
 }
 
+.launch-begin {
+  min-width: 148px;
+  height: 48px;
+  padding: 0 22px;
+  border: 1px solid rgba(var(--theme-rgb), 0.38);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(173, 132, 49, 0.92) 0%, rgba(245, 223, 174, 0.98) 100%);
+  color: #101b2f;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+}
+
+.launch-overlay.running .launch-begin {
+  opacity: 0;
+  pointer-events: none;
+}
+
 @keyframes launchPulse {
   0%, 100% { opacity: 0.45; transform: scale(0.96); }
   50% { opacity: 0.88; transform: scale(1.08); }
