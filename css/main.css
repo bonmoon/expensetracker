@@ -74,7 +74,7 @@ html, body {
   background:
     linear-gradient(180deg, rgba(5, 9, 18, 0.3) 0%, rgba(5, 9, 18, 0.78) 100%),
     url('../images/characters/aaron/Aaron2.PNG') center center / cover no-repeat;
-  filter: blur(26px) saturate(0.96);
+  filter: blur(14px) saturate(0.96);
   transform: scale(1.08);
 }
 
@@ -564,6 +564,7 @@ html, body {
 .home-title-area {
   text-align: center;
   padding: 0 72px;
+  margin-top: -28px;
   animation: fadeDown 1s ease 0.3s both;
 }
 
@@ -581,7 +582,7 @@ html, body {
   font-size: 16px;
   color: rgba(233, 240, 255, 0.88);
   letter-spacing: 3px;
-  margin-top: 8px;
+  margin-top: 4px;
   opacity: 0.85;
 }
 
@@ -1656,6 +1657,14 @@ canvas#pieChart {
 ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); border-radius: 2px; }
 
 @media (min-aspect-ratio: 10 / 16) {
+  .home-title-area {
+    margin-top: -56px;
+  }
+
+  .home-app-name {
+    font-size: clamp(28px, 4vw, 44px);
+  }
+
   .char-video-layer {
     background:
       linear-gradient(90deg, rgba(6, 3, 2, 0.92) 0%, rgba(6, 3, 2, 0.5) 18%, rgba(6, 3, 2, 0) 32%, rgba(6, 3, 2, 0) 68%, rgba(6, 3, 2, 0.5) 82%, rgba(6, 3, 2, 0.92) 100%);

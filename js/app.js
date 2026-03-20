@@ -9,6 +9,7 @@ const App = {
   isLaunchRunning: false,
   hasLaunchStarted: false,
   _launchTimers: [],
+  _launchSafetyTimer: null,
   launchAudio: null,
 
   CATEGORIES: [
@@ -68,7 +69,7 @@ const App = {
 
   setupLaunchAudio() {
     this.launchAudio = new Audio('applaunch.mp3');
-    this.launchAudio.loop = true;
+    this.launchAudio.loop = false;
     this.launchAudio.preload = 'auto';
     this.launchAudio.volume = 0.72;
   },
@@ -83,6 +84,7 @@ const App = {
     const overlay = document.getElementById('launch-overlay');
     const image = document.getElementById('launch-card-image');
     if (!overlay || !image) return;
+    image.addEventListener('error', () => this.skipLaunchSequence(), { once: true });
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       overlay.classList.add('hidden');
@@ -121,6 +123,10 @@ const App = {
     document.body.classList.add('launch-running');
     image.src = frames[0];
     this.playLaunchAudio();
+    clearTimeout(this._launchSafetyTimer);
+    this._launchSafetyTimer = setTimeout(() => {
+      if (this.isLaunchRunning) this.finishLaunchSequence();
+    }, 7000);
 
     this.queueLaunchStep(() => this.playLaunchFrames(frames, 1), 120);
     this.queueLaunchStep(() => {
@@ -143,7 +149,9 @@ const App = {
   },
 
   skipLaunchSequence() {
-    if (!this.isLaunchRunning) return;
+    if (!this.isLaunchRunning && !this.hasLaunchStarted) {
+      this.hasLaunchStarted = true;
+    }
 
     const overlay = document.getElementById('launch-overlay');
     const image = document.getElementById('launch-card-image');
@@ -155,6 +163,7 @@ const App = {
   finishLaunchSequence() {
     this.isLaunchRunning = false;
     this.clearLaunchTimers();
+    clearTimeout(this._launchSafetyTimer);
     document.body.classList.remove('launch-running');
     Character.activateDeferredVideo();
 
