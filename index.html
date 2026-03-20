@@ -16,11 +16,11 @@
 <div id="app">
   <div id="launch-overlay" class="launch-overlay" aria-live="polite">
     <div class="launch-backdrop"></div>
-    <div class="launch-card-stage">
+    <div class="launch-card-stage" onclick="App.beginLaunchSequence()">
       <div class="launch-card-glow"></div>
       <img id="launch-card-image" class="launch-card-image" src="images/taroteye1.png" alt="Tarot launch card">
     </div>
-    <div class="launch-wordmark">
+    <div class="launch-wordmark" onclick="App.beginLaunchSequence()">
       <div class="launch-title">BUTLER LEDGER</div>
       <div class="launch-subtitle">Moonlit Fortune Awakens</div>
     </div>

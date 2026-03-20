@@ -66,6 +66,8 @@ const Character = {
   current: null,
   videoEl: null,
   homeScreenEl: null,
+  pendingVideoSrc: null,
+  deferVideoUntilLaunch: true,
 
   init() {
     this.videoEl = document.getElementById('char-video');
@@ -194,6 +196,12 @@ const Character = {
   applyVideo(videoSrc) {
     if (!this.videoEl) return;
 
+    if (this.deferVideoUntilLaunch) {
+      this.pendingVideoSrc = videoSrc || null;
+      this.setVideoMode(false);
+      return;
+    }
+
     if (!videoSrc) {
       this.setVideoMode(false);
       this.videoEl.removeAttribute('src');
@@ -217,6 +225,11 @@ const Character = {
     this.videoEl.addEventListener('loadeddata', () => this.setVideoMode(true));
     this.videoEl.addEventListener('canplay', () => this.setVideoMode(true));
     this.videoEl.addEventListener('error', () => this.setVideoMode(false));
+  },
+
+  activateDeferredVideo() {
+    this.deferVideoUntilLaunch = false;
+    this.applyVideo(this.pendingVideoSrc || this.getCurrent()?.layers?.video || null);
   },
 
   setVideoMode(active) {

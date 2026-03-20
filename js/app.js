@@ -7,9 +7,9 @@ const App = {
   quickCategory: { name: '餐饮', emoji: '🍜' },
   selectedGoalEmoji: '🎯',
   isLaunchRunning: false,
+  hasLaunchStarted: false,
   _launchTimers: [],
   launchAudio: null,
-  _audioUnlockBound: false,
 
   CATEGORIES: [
     { name: '餐饮', emoji: '🍜' },
@@ -71,19 +71,6 @@ const App = {
     this.launchAudio.loop = true;
     this.launchAudio.preload = 'auto';
     this.launchAudio.volume = 0.72;
-
-    if (this._audioUnlockBound) return;
-    this._audioUnlockBound = true;
-
-    const tryResume = () => {
-      if (!this.launchAudio) return;
-      if (this.launchAudio.paused) {
-        this.launchAudio.play().catch(() => {});
-      }
-    };
-
-    document.addEventListener('touchstart', tryResume, { passive: true });
-    document.addEventListener('click', tryResume);
   },
 
   playLaunchAudio() {
@@ -99,6 +86,7 @@ const App = {
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       overlay.classList.add('hidden');
+      Character.activateDeferredVideo();
       return;
     }
 
@@ -106,13 +94,14 @@ const App = {
     const reveal = Character.getLaunchRevealImage();
     if (!frames.length || !reveal) {
       overlay.classList.add('hidden');
+      Character.activateDeferredVideo();
       return;
     }
     image.src = frames[0];
   },
 
   beginLaunchSequence() {
-    if (this.isLaunchRunning) return;
+    if (this.isLaunchRunning || this.hasLaunchStarted) return;
 
     const overlay = document.getElementById('launch-overlay');
     const image = document.getElementById('launch-card-image');
@@ -126,6 +115,7 @@ const App = {
       return;
     }
 
+    this.hasLaunchStarted = true;
     this.isLaunchRunning = true;
     overlay.classList.add('running');
     document.body.classList.add('launch-running');
@@ -166,6 +156,7 @@ const App = {
     this.isLaunchRunning = false;
     this.clearLaunchTimers();
     document.body.classList.remove('launch-running');
+    Character.activateDeferredVideo();
 
     const overlay = document.getElementById('launch-overlay');
     if (overlay) {
