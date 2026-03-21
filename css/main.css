@@ -77,6 +77,8 @@ html, body {
     url('../images/characters/aaron/Aaron2.PNG') center center / cover no-repeat;
   filter: blur(22px) saturate(0.9) brightness(0.66);
   transform: scale(1.16);
+  opacity: 1;
+  transition: opacity 0.55s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), filter 0.55s ease;
 }
 
 .launch-character-image {
@@ -88,8 +90,9 @@ html, body {
   object-fit: cover;
   object-position: var(--character-home-position);
   opacity: 0;
+  filter: blur(0);
   transform: scale(1.04);
-  transition: opacity 0.55s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.55s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), filter 0.55s ease;
 }
 
 .launch-card-stage,
@@ -143,6 +146,18 @@ html, body {
 
 .launch-overlay.show-reveal .launch-card-image {
   opacity: 0;
+}
+
+.launch-overlay.exit-to-home .launch-character-image {
+  opacity: 0;
+  filter: blur(20px);
+  transform: scale(0.88);
+}
+
+.launch-overlay.exit-to-home .launch-backdrop {
+  opacity: 0;
+  filter: blur(32px) saturate(0.84) brightness(0.58);
+  transform: scale(1.24);
 }
 
 .launch-wordmark {
@@ -226,6 +241,18 @@ body.launch-running .char-glow {
 /* ===== SPLASH / HOME SCREEN ===== */
 #screen-home {
   background: var(--brown-deep);
+}
+
+#screen-home .parallax-container,
+#screen-home .home-overlay {
+  transition: transform 0.62s cubic-bezier(0.22, 1, 0.36, 1), filter 0.62s ease, opacity 0.62s ease;
+}
+
+#screen-home.launch-home-enter .parallax-container,
+#screen-home.launch-home-enter .home-overlay {
+  transform: scale(1.04);
+  filter: blur(16px);
+  opacity: 0.68;
 }
 
 .parallax-container {
@@ -543,8 +570,8 @@ body.launch-running .char-glow {
 }
 
 @keyframes charBreathe {
-  0%, 100% { transform: translateX(calc(-50% + var(--px, 0px))) translateY(calc(var(--py, 0px))) scale(1); }
-  50% { transform: translateX(calc(-50% + var(--px, 0px))) translateY(calc(var(--py, 0px))) scale(1.015); }
+  0%, 100% { transform: translateX(var(--px, 0px)) translateY(var(--py, 0px)) scale(1); }
+  50% { transform: translateX(var(--px, 0px)) translateY(var(--py, 0px)) scale(1.015); }
 }
 
 @keyframes glowPulse {
@@ -1741,6 +1768,13 @@ canvas#pieChart {
     object-position: center top;
   }
 
+  #screen-home.launch-home-enter .parallax-container,
+  #screen-home.launch-home-enter .home-overlay {
+    transform: scale(1.025);
+    filter: blur(12px);
+    opacity: 0.76;
+  }
+
   /* Optimize shadows for lower-end devices */
   .shadow-gold {
     box-shadow: 0 0 8px rgba(216,186,115,0.12) !important;
@@ -1780,6 +1814,7 @@ canvas#pieChart {
   }
 
   .launch-overlay,
+  .launch-backdrop,
   .launch-character-image,
   .launch-card-stage,
   .launch-wordmark,

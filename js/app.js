@@ -10,6 +10,7 @@ const App = {
   hasLaunchStarted: false,
   _launchTimers: [],
   _launchSafetyTimer: null,
+  _launchExitTimer: null,
   launchAudio: null,
 
   CATEGORIES: [
@@ -141,8 +142,7 @@ const App = {
 
     this.queueLaunchStep(() => this.playLaunchFrames(frames, 1), 120);
     this.queueLaunchStep(() => overlay.classList.add('show-reveal'), 980);
-    this.queueLaunchStep(() => overlay.classList.add('hidden'), 1880);
-    this.queueLaunchStep(() => this.finishLaunchSequence(), 2580);
+    this.queueLaunchStep(() => this.finishLaunchSequence(), 1920);
   },
 
   playLaunchFrames(frames, startIndex = 0) {
@@ -174,16 +174,41 @@ const App = {
     this.isLaunchRunning = false;
     this.clearLaunchTimers();
     clearTimeout(this._launchSafetyTimer);
+    clearTimeout(this._launchExitTimer);
     document.body.classList.remove('launch-running');
-    Parallax.startLoop();
 
     const overlay = document.getElementById('launch-overlay');
+    const home = document.getElementById('screen-home');
+    const shouldAnimateOut = overlay &&
+      overlay.style.display !== 'none' &&
+      overlay.classList.contains('show-reveal') &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (home && shouldAnimateOut) {
+      home.classList.add('launch-home-enter');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => home.classList.remove('launch-home-enter'));
+      });
+    }
+
+    if (overlay && shouldAnimateOut) {
+      overlay.classList.add('exit-to-home');
+      this._launchExitTimer = setTimeout(() => {
+        overlay.classList.remove('running', 'show-reveal', 'exit-to-home', 'hidden');
+        overlay.style.display = 'none';
+        Character.activateDeferredVideo();
+        Parallax.startLoop();
+      }, 620);
+      return;
+    }
+
     if (overlay) {
-      overlay.classList.remove('running', 'show-reveal');
+      overlay.classList.remove('running', 'show-reveal', 'exit-to-home', 'hidden');
       overlay.style.display = 'none';
     }
 
     Character.activateDeferredVideo();
+    Parallax.startLoop();
   },
 
   queueLaunchStep(fn, delay) {
