@@ -280,7 +280,7 @@ html, body {
   position: absolute;
   inset: 0;
   z-index: 3;
-  pointer-events: none;
+  pointer-events: auto;
   opacity: 0;
   transition: opacity 0.45s ease;
 }
@@ -311,7 +311,7 @@ html, body {
   width: 100%;
   height: 100%;
   aspect-ratio: auto;
-  pointer-events: none;
+  pointer-events: auto;
   z-index: 4;
   animation: charBreathe 5.2s ease-in-out infinite;
 }

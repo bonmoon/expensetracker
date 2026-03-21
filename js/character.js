@@ -34,11 +34,16 @@ const CHARACTER_CONFIG = {
       reveal: 'images/characters/aaron/Aaron2.PNG',
     },
     audio: {
-      bgm: 'audio/bgm-aaron.mp3',
-      welcome: 'audio/voice/aaron-welcome.mp3',
-      record: 'audio/voice/aaron-record.mp3',
-      bigExpense: 'audio/voice/aaron-big-expense.mp3',
-      income: 'audio/voice/aaron-income.mp3',
+      launch: 'voice/applaunch.mp3',
+      voiceLines: [
+        'voice/英文1.mp3',
+        'voice/英文2.mp3',
+        'voice/英文3.mp3',
+        'voice/英文4.mp3',
+        'voice/英文5.mp3',
+        'voice/英文6.mp3',
+        'voice/英文7.mp3',
+      ],
     },
     quotes: {
       morning: ['早安，主人。今日账目由我守护。', '清晨好，主人。'],
@@ -222,16 +227,10 @@ const Character = {
   bindVideoEvents() {
     if (!this.videoEl) return;
 
+    this.videoEl.loop = true;
     this.videoEl.addEventListener('loadeddata', () => this.setVideoMode(true));
     this.videoEl.addEventListener('canplay', () => this.setVideoMode(true));
     this.videoEl.addEventListener('error', () => this.setVideoMode(false));
-    // Prevent video from auto-looping - stop at end
-    this.videoEl.addEventListener('ended', () => {
-      if (this.videoEl) {
-        this.videoEl.currentTime = 0;
-        this.videoEl.pause();
-      }
-    });
   },
 
   activateDeferredVideo() {
@@ -297,6 +296,16 @@ const Character = {
 
   getLaunchRevealImage() {
     return this.getCurrent()?.launch?.reveal || this.getCurrent()?.portrait || this.getCurrent()?.layers?.char || '';
+  },
+
+  getLaunchAudio() {
+    return this.getCurrent()?.audio?.launch || '';
+  },
+
+  getRandomVoiceLine() {
+    const lines = this.getCurrent()?.audio?.voiceLines || [];
+    if (!lines.length) return '';
+    return lines[Math.floor(Math.random() * lines.length)];
   },
 
   pickQuote(pool) {

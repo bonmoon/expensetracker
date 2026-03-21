@@ -68,15 +68,16 @@ const App = {
   },
 
   setupLaunchAudio() {
-    // Use AudioManager to control audio - prevents loops
-    if (window.AudioManager) {
-      window.AudioManager.getAudio('launch', 'applaunch.mp3');
+    const launchAudio = Character.getLaunchAudio();
+    if (window.AudioManager && launchAudio) {
+      window.AudioManager.getAudio('launch', launchAudio, { preload: 'metadata', loop: false });
     }
   },
 
   playLaunchAudio() {
-    if (window.AudioManager) {
-      window.AudioManager.play('launch', 'applaunch.mp3', 0.72).catch(() => {});
+    const launchAudio = Character.getLaunchAudio();
+    if (window.AudioManager && launchAudio) {
+      window.AudioManager.play('launch', launchAudio, 0.72, { preload: 'metadata', loop: false }).catch(() => {});
     }
   },
 
@@ -254,8 +255,26 @@ const App = {
 
   // ===== HOME =====
   setupHome() {
+    this.bindHomeCharacterVoice();
     this.updateHomeBalance();
     this.cycleGreeting();
+  },
+
+  bindHomeCharacterVoice() {
+    if (this._homeVoiceBound) return;
+    this._homeVoiceBound = true;
+
+    const triggerVoice = () => this.playRandomCharacterVoice();
+    ['layer-char', 'char-video', 'char-video-layer'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', triggerVoice);
+    });
+  },
+
+  playRandomCharacterVoice() {
+    const src = Character.getRandomVoiceLine();
+    if (!src || !window.AudioManager) return;
+    AudioManager.playVoice(src).catch(() => {});
   },
 
   _greetingTimer: null,
@@ -392,6 +411,7 @@ const App = {
     this.updateAmountDisplay();
     this.updateHomeBalance();
     this.showToast('记录成功 ✓');
+    this.playRandomCharacterVoice();
     // 回主页后触发台词
     setTimeout(() => this.triggerEventQuote(this.quickType, amount), 900);
     setTimeout(() => this.navigate('home'), 800);
@@ -707,6 +727,7 @@ const App = {
 
     DB.saveRecord(record);
     this.updateHomeBalance();
+    this.playRandomCharacterVoice();
     // 触发主页台词（回主页时）
     setTimeout(() => this.triggerEventQuote(record.type, parseFloat(data.amount)), 100);
 
