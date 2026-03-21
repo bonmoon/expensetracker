@@ -84,12 +84,13 @@ const App = {
   startLaunchSequence() {
     const overlay = document.getElementById('launch-overlay');
     const image = document.getElementById('launch-card-image');
+    const revealImage = document.getElementById('launch-character-image');
     if (!overlay || !image) return;
     image.addEventListener('error', () => this.skipLaunchSequence(), { once: true });
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       overlay.classList.add('hidden');
-      Character.activateDeferredVideo();
+      this.finishLaunchSequence();
       return;
     }
 
@@ -97,10 +98,14 @@ const App = {
     const reveal = Character.getLaunchRevealImage();
     if (!frames.length || !reveal) {
       overlay.classList.add('hidden');
-      Character.activateDeferredVideo();
+      this.finishLaunchSequence();
       return;
     }
+
+    overlay.classList.remove('running', 'show-reveal', 'hidden');
+    overlay.style.display = '';
     image.src = frames[0];
+    if (revealImage) revealImage.src = reveal;
   },
 
   beginLaunchSequence() {
@@ -108,6 +113,7 @@ const App = {
 
     const overlay = document.getElementById('launch-overlay');
     const image = document.getElementById('launch-card-image');
+    const revealImage = document.getElementById('launch-character-image');
     if (!overlay || !image) return;
 
     const frames = Character.getLaunchFrames();
@@ -120,21 +126,22 @@ const App = {
 
     this.hasLaunchStarted = true;
     this.isLaunchRunning = true;
+    Parallax.stop();
+    overlay.style.display = '';
+    overlay.classList.remove('hidden', 'show-reveal');
     overlay.classList.add('running');
     document.body.classList.add('launch-running');
     image.src = frames[0];
+    if (revealImage) revealImage.src = reveal;
     this.playLaunchAudio();
     clearTimeout(this._launchSafetyTimer);
     this._launchSafetyTimer = setTimeout(() => {
       if (this.isLaunchRunning) this.finishLaunchSequence();
-    }, 7000);
+    }, 6500);
 
     this.queueLaunchStep(() => this.playLaunchFrames(frames, 1), 120);
-    this.queueLaunchStep(() => {
-      overlay.classList.add('reveal-character');
-      image.src = reveal;
-    }, 1020);
-    this.queueLaunchStep(() => overlay.classList.add('hidden'), 1900);
+    this.queueLaunchStep(() => overlay.classList.add('show-reveal'), 980);
+    this.queueLaunchStep(() => overlay.classList.add('hidden'), 1880);
     this.queueLaunchStep(() => this.finishLaunchSequence(), 2580);
   },
 
@@ -156,8 +163,10 @@ const App = {
 
     const overlay = document.getElementById('launch-overlay');
     const image = document.getElementById('launch-card-image');
-    if (overlay) overlay.classList.add('reveal-character', 'hidden');
-    if (image) image.src = Character.getLaunchRevealImage();
+    const revealImage = document.getElementById('launch-character-image');
+    if (overlay) overlay.classList.add('show-reveal', 'hidden');
+    if (image) image.src = Character.getLaunchFrames()[0] || image.src;
+    if (revealImage) revealImage.src = Character.getLaunchRevealImage();
     this.finishLaunchSequence();
   },
 
@@ -166,13 +175,15 @@ const App = {
     this.clearLaunchTimers();
     clearTimeout(this._launchSafetyTimer);
     document.body.classList.remove('launch-running');
-    Character.activateDeferredVideo();
+    Parallax.startLoop();
 
     const overlay = document.getElementById('launch-overlay');
     if (overlay) {
-      overlay.classList.remove('running', 'reveal-character');
+      overlay.classList.remove('running', 'show-reveal');
       overlay.style.display = 'none';
     }
+
+    Character.activateDeferredVideo();
   },
 
   queueLaunchStep(fn, delay) {
