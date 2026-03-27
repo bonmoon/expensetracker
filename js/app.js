@@ -55,7 +55,8 @@ const App = {
 
   registerSW() {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(registration => {
+      const swUrl = new URL('sw.js', window.location.href);
+      navigator.serviceWorker.register(swUrl.href).then(registration => {
         registration.update().catch(() => {});
       }).catch(console.error);
 

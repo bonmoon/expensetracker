@@ -1,22 +1,24 @@
 const CACHE_NAME = 'butler-finance-v6';
+const BASE_URL = new URL('./', self.location.href);
+const INDEX_URL = new URL('index.html', BASE_URL).toString();
 const APP_SHELL = [
-  '/',
-  '/index.html',
-  '/css/main.css',
-  '/js/app.js',
-  '/js/character.js',
-  '/js/db.js',
-  '/js/sheets.js',
-  '/js/ai.js',
-  '/js/charts.js',
-  '/js/parallax.js',
-  '/js/butler-dialog.js',
-  '/images/icons/appicon.png',
-  '/images/icons/quick.png',
-  '/images/icons/ai.png',
-  '/images/icons/chart.png',
-  '/images/icons/savings.png',
-  '/images/icons/setting-icon.png',
+  new URL('./', BASE_URL).toString(),
+  INDEX_URL,
+  new URL('css/main.css', BASE_URL).toString(),
+  new URL('js/app.js', BASE_URL).toString(),
+  new URL('js/character.js', BASE_URL).toString(),
+  new URL('js/db.js', BASE_URL).toString(),
+  new URL('js/sheets.js', BASE_URL).toString(),
+  new URL('js/ai.js', BASE_URL).toString(),
+  new URL('js/charts.js', BASE_URL).toString(),
+  new URL('js/parallax.js', BASE_URL).toString(),
+  new URL('js/butler-dialog.js', BASE_URL).toString(),
+  new URL('images/icons/appicon.png', BASE_URL).toString(),
+  new URL('images/icons/quick.png', BASE_URL).toString(),
+  new URL('images/icons/ai.png', BASE_URL).toString(),
+  new URL('images/icons/chart.png', BASE_URL).toString(),
+  new URL('images/icons/savings.png', BASE_URL).toString(),
+  new URL('images/icons/setting-icon.png', BASE_URL).toString(),
 ];
 
 self.addEventListener('install', event => {
@@ -40,7 +42,7 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return;
 
   if (request.mode === 'navigate') {
-    event.respondWith(networkFirst(request, '/index.html'));
+    event.respondWith(networkFirst(request, INDEX_URL));
     return;
   }
 
