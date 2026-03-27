@@ -65,6 +65,64 @@ const CHARACTER_CONFIG = {
       homePosition: 'center top',
     },
   },
+  louris: {
+    id: 'louris',
+    enabled: true,
+    name: 'Louris',
+    title: 'Moonlit Steward',
+    theme: {
+      primary: '#7ab0d4',
+      secondary: '#0d1a2e',
+      accent: '#d8ebf7',
+      bg: '#060d18',
+      text: '#e8f0f8',
+      chatBubble: 'rgba(13,26,46,0.88)',
+      glow: 'rgba(122,176,212,0.18)',
+    },
+    layers: {
+      bg: 'images/characters/louris/louris1.PNG',
+      stars: null,
+      char: 'images/characters/louris/louris1.PNG',
+      prop1: null,
+      prop2: null,
+      video: 'images/characters/louris/video.MP4',
+    },
+    portrait: 'images/characters/louris/louris1.PNG',
+    launch: {
+      frames: [
+        'images/taroteye1.png',
+        'images/taroteye2.png',
+        'images/taroteye3.png',
+        'images/taroteye4.png',
+        'images/taroteye5.png',
+        'images/taroteye6.png',
+      ],
+      reveal: 'images/characters/louris/louris1.PNG',
+    },
+    audio: {
+      launch: '',
+      voiceLines: [],
+    },
+    quotes: {
+      morning: ['早安，主人。月光尚未散去，今日账目已为您备好。'],
+      afternoon: ['午后安，主人。要让我替您记下今天的收支吗？'],
+      evening: ['晚上好，主人。今夜的账册，也由我为您守着。'],
+      night: ['夜深了，主人。愿月色与我一同守护您。'],
+      afterRecord: ['已替主人收入月光账册，静候下一笔吩咐。'],
+      bigExpense: ['主人，这笔开销颇有分量，是否要我一起盯紧预算？'],
+      income: ['真是好消息，主人。今夜的月色都明亮了几分。'],
+      welcome: ['您好，主人。若要记账，只需告诉我金额、类别或日期即可。'],
+    },
+    personality: '你是Louris，一位温柔而克制的月光执事。说话带一点诗意，始终沉静体贴。',
+    ui: {
+      avatarSize: '235%',
+      avatarPosition: '50% 16%',
+      dialogAvatarSize: '235%',
+      dialogAvatarPosition: '50% 16%',
+      videoObjectPosition: 'center top',
+      homePosition: 'center top',
+    },
+  },
 };
 
 const Character = {
@@ -73,6 +131,7 @@ const Character = {
   homeScreenEl: null,
   pendingVideoSrc: null,
   deferVideoUntilLaunch: true,
+  videoLoadToken: 0,
 
   init() {
     this.videoEl = document.getElementById('char-video');
@@ -134,8 +193,8 @@ const Character = {
     localStorage.setItem('butler_character', id);
 
     this.applyTheme(config.theme);
-    this.applyLayers(config.layers);
     this.applyCharacterUI(config);
+    this.applyLayers(config.layers);
     this.updateSwitcherState(id);
 
     if (playSound && window.AudioManager && config.audio?.bgm) {
@@ -207,8 +266,14 @@ const Character = {
       return;
     }
 
+    this.videoLoadToken += 1;
+    const token = this.videoLoadToken;
+    this.videoEl.dataset.switchToken = String(token);
+    this.videoEl.dataset.pendingReveal = videoSrc ? '1' : '0';
+    this.videoEl.pause();
+    this.setVideoMode(false);
+
     if (!videoSrc) {
-      this.setVideoMode(false);
       this.videoEl.removeAttribute('src');
       this.videoEl.load();
       return;
@@ -217,25 +282,45 @@ const Character = {
     this.videoEl.dataset.src = videoSrc;
     this.videoEl.src = videoSrc;
     this.videoEl.load();
-    this.videoEl.play().then(() => {
-      this.setVideoMode(true);
-    }).catch(() => {
-      this.setVideoMode(false);
-    });
+    this.revealVideoWhenReady(token);
   },
 
   bindVideoEvents() {
     if (!this.videoEl) return;
 
     this.videoEl.loop = true;
-    this.videoEl.addEventListener('loadeddata', () => this.setVideoMode(true));
-    this.videoEl.addEventListener('canplay', () => this.setVideoMode(true));
-    this.videoEl.addEventListener('error', () => this.setVideoMode(false));
+    const tryReveal = () => {
+      if (!this.videoEl || this.videoEl.dataset.pendingReveal !== '1') return;
+      const token = Number(this.videoEl.dataset.switchToken || '0');
+      this.revealVideoWhenReady(token);
+    };
+    this.videoEl.addEventListener('loadeddata', tryReveal);
+    this.videoEl.addEventListener('canplay', tryReveal);
+    this.videoEl.addEventListener('error', () => {
+      if (!this.videoEl) return;
+      this.videoEl.dataset.pendingReveal = '0';
+      this.setVideoMode(false);
+    });
   },
 
   activateDeferredVideo() {
     this.deferVideoUntilLaunch = false;
     this.applyVideo(this.pendingVideoSrc || this.getCurrent()?.layers?.video || null);
+  },
+
+  revealVideoWhenReady(token) {
+    if (!this.videoEl || String(token) !== this.videoEl.dataset.switchToken) return;
+    if (this.videoEl.readyState < 2) return;
+
+    this.videoEl.play().then(() => {
+      if (!this.videoEl || String(token) !== this.videoEl.dataset.switchToken) return;
+      this.videoEl.dataset.pendingReveal = '0';
+      this.setVideoMode(true);
+    }).catch(() => {
+      if (!this.videoEl || String(token) !== this.videoEl.dataset.switchToken) return;
+      this.videoEl.dataset.pendingReveal = '0';
+      this.setVideoMode(false);
+    });
   },
 
   setVideoMode(active) {

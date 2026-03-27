@@ -15,6 +15,13 @@ const Sheets = {
     } catch(e) {}
   },
 
+  async replaceRecord(record) {
+    if (!record?.id) return;
+    await this.deleteRecord(record.id);
+    await new Promise(resolve => setTimeout(resolve, 120));
+    await this.pushRecord(record);
+  },
+
   // 删除Sheets里的记录
   async deleteRecord(id) {
     const url = this.getURL();

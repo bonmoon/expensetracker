@@ -487,18 +487,19 @@ const App = {
     // 找到对应emoji
     const cat = this.CATEGORIES.find(c => c.name === category);
     const emoji = cat ? cat.emoji : '💸';
-    // 更新记录
-    const records = DB.getRecords().map(r => {
-      if (r.id !== id) return r;
-      const updated = { ...r, type, amount, category, emoji, note };
-      if (date) {
-        const t = new Date(r.createdAt);
-        updated.createdAt = `${date}T${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}:00`;
-      }
-      return updated;
-    });
-    records.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-    localStorage.setItem(DB.KEY_RECORDS, JSON.stringify(records));
+    const existing = DB.getRecords().find(r => r.id === id);
+    if (!existing) {
+      this.showToast('记录不存在');
+      return;
+    }
+
+    const updates = { type, amount, category, emoji, note };
+    if (date) {
+      const t = new Date(existing.createdAt);
+      updates.createdAt = `${date}T${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}:00`;
+    }
+
+    DB.updateRecord(id, updates);
     this.closeModal('modal-edit-record');
     this.updateHomeBalance();
     Charts.init();

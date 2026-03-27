@@ -32,6 +32,21 @@ const DB = {
     return record;
   },
 
+  updateRecord(id, updates) {
+    let updatedRecord = null;
+    const records = this.getRecords().map(record => {
+      if (record.id !== id) return record;
+      updatedRecord = { ...record, ...updates };
+      return updatedRecord;
+    });
+    if (!updatedRecord) return null;
+
+    records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    localStorage.setItem(this.KEY_RECORDS, JSON.stringify(records));
+    if (window.Sheets) Sheets.replaceRecord(updatedRecord);
+    return updatedRecord;
+  },
+
   deleteRecord(id) {
     // 从本地移除
     const records = this.getRecords().filter(r => r.id !== id);

@@ -345,7 +345,7 @@ body.launch-running .char-glow {
   z-index: 3;
   pointer-events: auto;
   opacity: 0;
-  transition: opacity 0.45s ease;
+  transition: opacity 0.6s ease;
 }
 
 .char-video-layer video {
@@ -377,6 +377,7 @@ body.launch-running .char-glow {
   pointer-events: auto;
   z-index: 4;
   animation: charBreathe 5.2s ease-in-out infinite;
+  transition: opacity 0.55s ease;
 }
 
 #layer-char img {
@@ -390,10 +391,12 @@ body.launch-running .char-glow {
 
 #layer-raven {
   display: none;
+  transition: opacity 0.55s ease;
 }
 
 #layer-book {
   display: none;
+  transition: opacity 0.55s ease;
 }
 
 .content-layer { display: block; }
@@ -656,27 +659,25 @@ body.launch-running .char-glow {
   gap: 14px;
 }
 
-/* 中间悬浮台词 */
 .home-center-quote {
-  position: absolute;
-  left: 0; right: 0;
-  bottom: 23%;
-  text-align: center;
-  padding: 0 24px;
+  width: min(100%, 560px);
+  align-self: center;
   pointer-events: none;
-  animation: fadeDown 1s ease 0.8s both;
+  animation: fadeUp 1s ease 0.4s both;
 }
 
 .greeting-text {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: rgba(9, 18, 34, 0.58);
-  border: 1px solid rgba(var(--theme-rgb), 0.22);
-  backdrop-filter: blur(12px);
+  width: 100%;
+  min-height: 64px;
+  padding: 14px 18px;
+  border-radius: 22px;
+  background: rgba(8, 18, 36, 0.7);
+  border: 1px solid rgba(var(--theme-rgb), 0.3);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.2);
   font-family: var(--font-body);
   font-style: italic;
   font-size: 16px;
@@ -684,7 +685,9 @@ body.launch-running .char-glow {
   text-shadow: 0 1px 8px rgba(0,0,0,0.45);
   opacity: 0.98;
   transition: opacity 0.5s ease;
-  line-height: 1.5;
+  line-height: 1.55;
+  text-align: center;
+  white-space: normal;
 }
 
 /* 台词切换动画 */
@@ -1747,9 +1750,6 @@ canvas#pieChart {
     bottom: 10%;
   }
 
-  .home-center-quote {
-    bottom: 28%;
-  }
 }
 
 /* ===== MOBILE PERFORMANCE OPTIMIZATIONS ===== */
@@ -1766,6 +1766,26 @@ canvas#pieChart {
 
   .launch-character-image {
     object-position: center top;
+  }
+
+  .home-overlay {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 88px);
+  }
+
+  .home-bottom {
+    gap: 12px;
+  }
+
+  .home-center-quote {
+    width: 100%;
+  }
+
+  .greeting-text {
+    min-height: 72px;
+    padding: 14px 16px;
+    font-size: 15px;
+    line-height: 1.6;
+    border-radius: 18px;
   }
 
   #screen-home.launch-home-enter .parallax-container,
@@ -1823,5 +1843,25 @@ canvas#pieChart {
   .screen,
   .char-video-layer {
     transition-duration: 0.35s !important;
+  }
+
+  .home-title-area {
+    padding: 0 56px;
+    margin-top: -16px;
+  }
+
+  .home-app-name {
+    font-size: clamp(28px, 10vw, 40px);
+    letter-spacing: 3px;
+  }
+
+  .home-tagline {
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
+
+  .greeting-text {
+    min-height: 76px;
+    font-size: 14px;
   }
 }
