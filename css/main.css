@@ -1507,6 +1507,10 @@ canvas#pieChart {
   line-height: 1.7;
 }
 
+#goals-list {
+  padding: 0 16px 16px;
+}
+
 /* ===== DEPOSIT MODAL ===== */
 .deposit-goal-list {
   display: flex;
@@ -1942,6 +1946,12 @@ canvas#pieChart {
 
   .savings-jar-hero {
     min-height: 260px;
+  }
+
+  .savings-jar-copy,
+  .btn-add-goal,
+  .goals-empty-state {
+    display: none;
   }
 
   .savings-jar-copy {
