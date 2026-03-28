@@ -40,8 +40,22 @@ const Sheets = {
     if (!url) return { success: false, message: '未设置 URL' };
     const records = DB.getRecords();
     if (!records.length) return { success: true, message: '暂无记录' };
+
+    // Fetch existing IDs from Sheets to avoid creating duplicates
+    let existingIds = new Set();
+    try {
+      const res = await fetch(url + '?action=getAll', { mode: 'cors' });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) existingIds = new Set(data.map(r => r.id).filter(Boolean));
+      }
+    } catch(e) { /* offline or CORS — will push all */ }
+
+    const toSync = existingIds.size > 0 ? records.filter(r => !existingIds.has(r.id)) : records;
+    if (!toSync.length) return { success: true, message: '所有记录已是最新' };
+
     let count = 0;
-    for (const record of records) {
+    for (const record of toSync) {
       try {
         await fetch(url, {
           method: 'POST', mode: 'no-cors',
@@ -49,10 +63,10 @@ const Sheets = {
           body: JSON.stringify({ action: 'addRecord', record })
         });
         count++;
-        await new Promise(r => setTimeout(r, 120));
+        await new Promise(r => setTimeout(r, 100));
       } catch(e) {}
     }
-    return { success: true, message: `已同步 ${count} 条记录` };
+    return { success: true, message: `已同步 ${count} 条新记录` };
   },
 
   // 从Sheets恢复，自动过滤本地已删除的记录
