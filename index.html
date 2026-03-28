@@ -189,7 +189,10 @@
       </div>
 
       <div class="chart-card">
-        <h3>最近记录</h3>
+        <h3 id="record-detail-title">本月明细</h3>
+        <p id="record-detail-hint" style="font-size:12px;color:var(--text-secondary);font-style:italic;margin-bottom:10px;">
+          点击本月收入、本月支出或净结余查看按日期分组的记录，点记录可直接编辑。
+        </p>
         <div class="recent-list" id="recent-list"></div>
       </div>
     </div>
@@ -292,18 +295,15 @@
           <span id="sheets-status-text" style="font-size:12px;color:var(--text-secondary);font-style:italic;">检查中…</span>
         </div>
         <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;font-style:italic;">
-          每次记账自动同步到您的 Google Sheet，数据永不丢失。
+          手动绑定您自己的 Apps Script Web App URL 后，记账、编辑、删除和恢复才会同步到您的 Google Sheet。
         </p>
-        <input class="note-input" id="sheets-url-input" type="text" placeholder="Apps Script Web App URL（已内置）" style="font-size:12px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-          <button class="btn-submit" onclick="App.saveSheetsUrl()" style="font-size:12px;letter-spacing:1px;">保存 URL</button>
-          <button class="btn-submit" onclick="App.syncAllToSheets()" style="background:linear-gradient(135deg,#2a5a35,#4a9a60);font-size:12px;letter-spacing:1px;" id="btn-sync-all">全量同步↑</button>
-        </div>
+        <input class="note-input" id="sheets-url-input" type="text" placeholder="输入您自己的 Apps Script Web App URL" style="font-size:12px;">
+        <button class="btn-submit" onclick="App.saveSheetsUrl()" style="margin-top:8px;font-size:12px;letter-spacing:1px;">保存 URL</button>
         <button class="btn-submit" onclick="App.restoreFromSheets()"
           style="margin-top:8px;width:100%;background:linear-gradient(135deg,#1a3a5a,#2a6a9a);font-size:12px;letter-spacing:1px;"
           id="btn-restore">从 Sheets 恢复记录↓</button>
         <p style="font-size:11px;color:var(--text-secondary);margin-top:8px;font-style:italic;">
-          换手机或清除缓存后，点此从云端恢复所有历史记录。
+          换手机或清除缓存后，点此从云端恢复记录。留空保存即可解绑，公共代码不会再默认写入任何 Sheet。
         </p>
       </div>
 

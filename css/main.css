@@ -1245,6 +1245,18 @@ body.launch-running .char-glow {
   padding: 12px;
   text-align: center;
   border: 1px solid rgba(201,168,76,0.3);
+  appearance: none;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.summary-stat:active {
+  transform: scale(0.98);
+}
+
+.summary-stat.active {
+  border-color: rgba(var(--theme-rgb), 0.55);
+  box-shadow: 0 10px 22px rgba(61, 36, 16, 0.12);
 }
 
 .stat-label {
@@ -1356,6 +1368,24 @@ canvas#pieChart {
   gap: 8px;
 }
 
+.record-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.record-date-group + .record-date-group {
+  margin-top: 10px;
+}
+
+.record-date-group-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--gold-dark);
+  padding: 0 4px;
+}
+
 .record-item {
   display: flex;
   align-items: center;
@@ -1364,6 +1394,10 @@ canvas#pieChart {
   background: rgba(245,234,216,0.6);
   border-radius: 12px;
   border: 1px solid rgba(201,168,76,0.15);
+}
+
+.record-item-editable {
+  cursor: pointer;
 }
 
 .record-emoji { font-size: 22px; }

@@ -559,6 +559,7 @@ const App = {
       setTimeout(() => wrap.remove(), 300);
     }
     this.updateHomeBalance();
+    Charts.init();
     this.showToast('已删除');
   },
 
@@ -1164,7 +1165,7 @@ const App = {
 
     // Sheets URL
     const sheetsEl = document.getElementById('sheets-url-input');
-    if (sheetsEl) sheetsEl.placeholder = Sheets.DEFAULT_URL.substring(0, 50) + '…（已内置）';
+    if (sheetsEl) sheetsEl.value = settings.sheetsUrl || '';
 
     const bgmToggleEl = document.getElementById('bgm-enabled-toggle');
     if (bgmToggleEl) bgmToggleEl.checked = settings.bgmEnabled !== false;
@@ -1222,7 +1223,16 @@ const App = {
   saveSheetsUrl() {
     const el = document.getElementById('sheets-url-input');
     const url = el?.value.trim();
-    if (!url) { this.showToast('请输入 Apps Script URL'); return; }
+    if (!url) {
+      DB.saveSetting('sheetsUrl', '');
+      this.showToast('Sheets 绑定已清除');
+      this.checkSheetsStatus();
+      return;
+    }
+    if (!/^https?:\/\//i.test(url)) {
+      this.showToast('请输入有效的 Apps Script URL');
+      return;
+    }
     DB.saveSetting('sheetsUrl', url);
     this.showToast('Sheets URL 已保存 ✓');
     this.checkSheetsStatus();
@@ -1232,31 +1242,27 @@ const App = {
     const dot  = document.getElementById('sheets-status-dot');
     const text = document.getElementById('sheets-status-text');
     if (!dot || !text) return;
+    const url = Sheets.getURL();
+    if (!url) {
+      dot.style.background = '#9aa5b5';
+      text.textContent = '未绑定 · 输入您自己的 Apps Script URL 后启用';
+      return;
+    }
     dot.style.background = '#f0c040';
     text.textContent = '连接中…';
     try {
-      const url = Sheets.getURL();
       const res = await fetch(url + '?action=ping', { mode: 'cors', signal: AbortSignal.timeout(6000) });
       if (res.ok) {
         dot.style.background = '#5bc47a';
-        text.textContent = '已连接 · 每次记账自动同步';
+        text.textContent = '已连接 · 新增、编辑、删除都会自动同步';
       } else {
         dot.style.background = '#e07070';
         text.textContent = `连接失败 (HTTP ${res.status})`;
       }
     } catch {
-      // Network/CORS error — POST sync may still work (no-cors)
-      dot.style.background = '#f0c040';
-      text.textContent = '网络受限 · 记账仍会静默同步';
+      dot.style.background = '#e07070';
+      text.textContent = '连接失败 · 请检查 URL、部署权限或网络';
     }
-  },
-
-  async syncAllToSheets() {
-    const btn = document.getElementById('btn-sync-all');
-    if (btn) btn.textContent = '同步中…';
-    const result = await Sheets.pushAll();
-    if (btn) btn.textContent = '全量同步';
-    this.showToast(result.message);
   },
 
   exportData() {
