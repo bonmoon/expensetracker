@@ -204,12 +204,30 @@
     </div>
     <div class="screen-inner">
       <div class="savings-jar-hero">
-        <div class="savings-jar-backdrop"></div>
+        <video
+          id="savings-hero-video"
+          class="savings-hero-video"
+          muted
+          playsinline
+          loop
+          preload="none"
+          poster="images/wishjarstatic.PNG"
+        >
+          <source src="images/wishjar.MP4" type="video/mp4">
+        </video>
+        <div class="savings-hero-overlay"></div>
         <div class="savings-jar-copy">
           <div class="savings-hero-title">Moonlight Treasury</div>
           <div class="savings-hero-text">把每一笔积累都放进你的梦想储蓄罐里，让目标慢慢发光。</div>
         </div>
-        <img src="images/icons/savings.png" class="jar-img" alt="">
+        <button
+          class="savings-jar-trigger"
+          type="button"
+          onclick="App.showDepositModal()"
+          aria-label="点击罐子存入或创建储蓄目标"
+        >
+          <img src="images/wishjarstatic.PNG" class="jar-img" alt="">
+        </button>
       </div>
       <button class="btn-add-goal" onclick="App.showAddGoalModal()">+ 新增储蓄目标</button>
       <div id="goals-list"></div>
@@ -286,6 +304,30 @@
           您的专属财务管家<br>
           <span style="font-style:italic;opacity:0.7;">本地存储 · Sheets云备份 · AI智能记账</span>
         </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DEPOSIT MODAL ===== -->
+  <div class="modal-overlay" id="modal-deposit" onclick="event.target===this&&App.closeModal('modal-deposit')">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">存入储蓄罐</div>
+      <div id="deposit-goal-list" class="deposit-goal-list"></div>
+      <input class="modal-input" id="deposit-amount" type="number" placeholder="存入金额 ¥" min="1" step="0.01" inputmode="decimal">
+      <button class="btn-submit" onclick="App.confirmDeposit()" style="margin-top:4px;">确 认 存 入</button>
+    </div>
+  </div>
+
+  <!-- ===== DELETE GOAL MODAL ===== -->
+  <div class="modal-overlay" id="modal-delete-goal" onclick="event.target===this&&App.closeModal('modal-delete-goal')">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">删除储蓄目标</div>
+      <p style="text-align:center;color:var(--text-secondary);font-size:14px;font-family:var(--font-body);margin-bottom:20px;">确认删除此储蓄目标？此操作无法撤销。</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button class="btn-submit" onclick="App.closeModal('modal-delete-goal')" style="background:linear-gradient(135deg,#5a6a7f,#8a9ab5);">取 消</button>
+        <button class="btn-submit" onclick="App.confirmDeleteGoal()" style="background:linear-gradient(135deg,#6a1a1a,#c04040);">确 认 删 除</button>
       </div>
     </div>
   </div>

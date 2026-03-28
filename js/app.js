@@ -12,6 +12,11 @@ const App = {
   _launchSafetyTimer: null,
   _launchExitTimer: null,
   launchAudio: null,
+  savingsVideoEl: null,
+  savingsJarHeroEl: null,
+  savingsJarTriggerEl: null,
+  savingsJarImgEl: null,
+  _savingsVisibilityBound: false,
 
   CATEGORIES: [
     { name: '餐饮', emoji: '🍜' },
@@ -224,27 +229,34 @@ const App = {
 
   // ===== NAVIGATION =====
   navigate(screenId) {
-    const current = document.getElementById(`screen-${this.currentScreen}`);
+    const previousScreen = this.currentScreen;
+    const current = document.getElementById(`screen-${previousScreen}`);
     const next = document.getElementById(`screen-${screenId}`);
     if (!next) return;
 
-    if (current) {
-      current.classList.remove('active');
+    // Teardown leaving screen
+    if (previousScreen === 'home' && screenId !== 'home') {
+      Parallax.stop();
+      const charVideo = document.getElementById('char-video');
+      if (charVideo && !charVideo.paused) charVideo.pause();
     }
+
+    if (current) current.classList.remove('active');
     next.classList.add('active');
     this.currentScreen = screenId;
+
+    // Manage savings video
+    if (previousScreen !== screenId) this.syncSavingsHeroVideoPlayback();
 
     // Screen-specific init
     if (screenId === 'charts') {
       setTimeout(() => Charts.init(), 100);
-      // 不触发对话框
     }
     if (screenId === 'savings') {
       this.renderGoals();
-      // 不触发对话框
+      requestAnimationFrame(() => this.updateSavingsJarOverlay());
     }
     if (screenId === 'ai') {
-      // AI页面不重置，只在首次初始化
       if (!this._aiInited) {
         this.setupAI();
         this._aiInited = true;
@@ -253,7 +265,9 @@ const App = {
     if (screenId === 'home') {
       this.updateHomeBalance();
       Parallax.startLoop();
-      // 主页台词用淡入淡出切换
+      // Resume home character video
+      const charVideo = document.getElementById('char-video');
+      if (charVideo && charVideo.src && charVideo.paused) charVideo.play().catch(() => {});
       this.cycleGreeting();
     }
   },
@@ -509,7 +523,6 @@ const App = {
 
   deleteRecordFromEdit() {
     const id = document.getElementById('edit-record-id').value;
-    if (!confirm('确认删除这条记录？')) return;
     DB.deleteRecord(id);
     this.closeModal('modal-edit-record');
     this.updateHomeBalance();
@@ -519,7 +532,6 @@ const App = {
 
   // 直接从列表删除（滑动后点删除按钮）
   deleteRecord(id) {
-    if (!confirm('确认删除这条记录？')) return;
     DB.deleteRecord(id);
     // 移除DOM元素
     const wrap = document.getElementById(`wrap-${id}`);
@@ -820,6 +832,26 @@ const App = {
           onclick="App.selectGoalEmoji('${e}',this)">${e}</span>
       `).join('');
     }
+
+    this.savingsVideoEl = document.getElementById('savings-hero-video');
+    this.savingsJarHeroEl = document.querySelector('.savings-jar-hero');
+    this.savingsJarTriggerEl = document.querySelector('.savings-jar-trigger');
+    this.savingsJarImgEl = this.savingsJarTriggerEl?.querySelector('.jar-img') || null;
+    if (this.savingsVideoEl) {
+      this.savingsVideoEl.muted = true;
+      this.savingsVideoEl.loop = true;
+      this.savingsVideoEl.playsInline = true;
+    }
+
+    if (!this._savingsVisibilityBound) {
+      document.addEventListener('visibilitychange', () => this.syncSavingsHeroVideoPlayback());
+      window.addEventListener('pagehide', () => this.pauseSavingsHeroVideo());
+      window.addEventListener('resize', () => this.updateSavingsJarOverlay());
+      this._savingsVisibilityBound = true;
+    }
+
+    this.updateSavingsJarOverlay();
+    this.syncSavingsHeroVideoPlayback();
   },
 
   selectGoalEmoji(emoji, el) {
@@ -834,7 +866,7 @@ const App = {
     if (!el) return;
 
     if (!goals.length) {
-      el.innerHTML = '<div style="text-align:center;color:#aaa;font-style:italic;padding:30px;font-family:var(--font-body);">暂无储蓄目标<br>点击上方按钮新增</div>';
+      el.innerHTML = '<div class="goals-empty-state">暂无储蓄目标<br>点击罐子创建</div>';
       return;
     }
 
@@ -870,6 +902,66 @@ const App = {
     document.getElementById('modal-goal').classList.add('open');
   },
 
+  playSavingsHeroVideo() {
+    if (!this.savingsVideoEl) return;
+    const playPromise = this.savingsVideoEl.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {});
+    }
+  },
+
+  pauseSavingsHeroVideo() {
+    if (!this.savingsVideoEl) return;
+    this.savingsVideoEl.pause();
+  },
+
+  updateSavingsJarOverlay() {
+    if (!this.savingsJarHeroEl || !this.savingsJarTriggerEl || !this.savingsJarImgEl) return;
+
+    const heroWidth = this.savingsJarHeroEl.clientWidth;
+    const heroHeight = this.savingsJarHeroEl.clientHeight;
+    if (!heroWidth || !heroHeight) return;
+
+    const sourceWidth = 510;
+    const sourceHeight = 765;
+    const bottleX = 241;
+    const bottleY = 281;
+    const bottleWidth = 269;
+    const bottleHeight = 353;
+
+    const scale = Math.max(heroWidth / sourceWidth, heroHeight / sourceHeight);
+    const renderedWidth = sourceWidth * scale;
+    const renderedHeight = sourceHeight * scale;
+    const offsetX = (heroWidth - renderedWidth) / 2;
+    const offsetY = (heroHeight - renderedHeight) / 2;
+    const left = offsetX + bottleX * scale;
+    const top = offsetY + bottleY * scale;
+    const width = bottleWidth * scale;
+    const height = bottleHeight * scale;
+
+    this.savingsJarTriggerEl.style.left = `${left}px`;
+    this.savingsJarTriggerEl.style.top = `${top}px`;
+    this.savingsJarTriggerEl.style.width = `${width}px`;
+    this.savingsJarTriggerEl.style.height = `${height}px`;
+
+    this.savingsJarImgEl.style.width = `${renderedWidth}px`;
+    this.savingsJarImgEl.style.height = `${renderedHeight}px`;
+    this.savingsJarImgEl.style.left = `${-left}px`;
+    this.savingsJarImgEl.style.top = `${-top}px`;
+  },
+
+  syncSavingsHeroVideoPlayback() {
+    if (!this.savingsVideoEl) return;
+
+    const shouldPlay = this.currentScreen === 'savings' && !document.hidden;
+    if (shouldPlay) {
+      this.playSavingsHeroVideo();
+      return;
+    }
+
+    this.pauseSavingsHeroVideo();
+  },
+
   closeModal(id) {
     document.getElementById(id).classList.remove('open');
   },
@@ -897,28 +989,76 @@ const App = {
     this.showToast('储蓄目标已创建 ✓');
   },
 
-  async addToGoal(id) {
-    const amount = parseFloat(prompt('存入金额：') || '0');
-    if (!amount || amount <= 0) return;
+  // "+ 存入" button on each goal card opens deposit modal pre-selecting that goal
+  addToGoal(id) {
+    this.showDepositModal(id);
+  },
+
+  // Jar tap or "+ 存入": open deposit modal. Calls showAddGoalModal if no goals exist.
+  showDepositModal(preselectedId = null) {
     const goals = DB.getGoals();
-    const goal = goals.find(g => g.id === id);
+    if (!goals.length) { this.showAddGoalModal(); return; }
+
+    this._selectedDepositGoalId = preselectedId || (goals.length === 1 ? goals[0].id : null);
+
+    const listEl = document.getElementById('deposit-goal-list');
+    if (listEl) {
+      listEl.innerHTML = goals.map(g => {
+        const pct = Math.min(100, (g.saved / g.target) * 100).toFixed(1);
+        const sel = g.id === this._selectedDepositGoalId ? 'selected' : '';
+        return `
+          <div class="deposit-goal-item ${sel}" onclick="App._selectDepositGoal('${g.id}',this)">
+            <span class="deposit-goal-emoji">${g.emoji}</span>
+            <span class="deposit-goal-name">${g.name}</span>
+            <span class="deposit-goal-meta">¥${g.saved.toLocaleString()}<br>${pct}%</span>
+          </div>`;
+      }).join('');
+    }
+    const amountEl = document.getElementById('deposit-amount');
+    if (amountEl) amountEl.value = '';
+    document.getElementById('modal-deposit').classList.add('open');
+    setTimeout(() => { if (amountEl) amountEl.focus(); }, 360);
+  },
+
+  _selectDepositGoal(id, el) {
+    this._selectedDepositGoalId = id;
+    document.querySelectorAll('.deposit-goal-item').forEach(i => i.classList.remove('selected'));
+    el.classList.add('selected');
+  },
+
+  confirmDeposit() {
+    if (!this._selectedDepositGoalId) { this.showToast('请先选择储蓄目标'); return; }
+    const amountEl = document.getElementById('deposit-amount');
+    const amount = parseFloat(amountEl?.value || '0');
+    if (!amount || amount <= 0) { this.showToast('请输入存入金额'); return; }
+
+    const goal = DB.getGoals().find(g => g.id === this._selectedDepositGoalId);
     if (!goal) return;
     const newSaved = goal.saved + amount;
-    DB.updateGoal(id, { saved: newSaved });
+    DB.updateGoal(this._selectedDepositGoalId, { saved: newSaved });
+    this._selectedDepositGoalId = null;
+    this.closeModal('modal-deposit');
     this.renderGoals();
     this.showToast(`已存入 ¥${amount.toLocaleString()} ✓`);
-    // 检查是否完成目标
+
     if (newSaved >= goal.target) {
-      ButlerDialog.onGoalComplete();
+      setTimeout(() => ButlerDialog.onGoalComplete(), 400);
     } else if (goal.deadline) {
-      const daysLeft = Math.ceil((new Date(goal.deadline) - new Date()) / 86400000);
-      if (daysLeft <= 7 && daysLeft > 0) ButlerDialog.onGoalUrgent();
+      const daysLeft = Math.ceil((new Date(goal.deadline + '-01') - new Date()) / 86400000);
+      if (daysLeft <= 7 && daysLeft > 0) setTimeout(() => ButlerDialog.onGoalUrgent(), 400);
     }
   },
 
   deleteGoal(id) {
-    if (!confirm('确认删除此储蓄目标？')) return;
-    DB.deleteGoal(id);
+    this._pendingDeleteGoalId = id;
+    document.getElementById('modal-delete-goal').classList.add('open');
+  },
+
+  confirmDeleteGoal() {
+    if (!this._pendingDeleteGoalId) return;
+    DB.deleteGoal(this._pendingDeleteGoalId);
+    this._pendingDeleteGoalId = null;
+    this.closeModal('modal-delete-goal');
     this.renderGoals();
     this.showToast('已删除');
   },
@@ -982,20 +1122,22 @@ const App = {
     const dot  = document.getElementById('sheets-status-dot');
     const text = document.getElementById('sheets-status-text');
     if (!dot || !text) return;
-    dot.style.background  = '#f0c040';
+    dot.style.background = '#f0c040';
     text.textContent = '连接中…';
     try {
       const url = Sheets.getURL();
-      // Apps Script GET 端点测试
-      const res = await fetch(url, { method: 'GET', mode: 'cors' });
+      const res = await fetch(url + '?action=ping', { mode: 'cors', signal: AbortSignal.timeout(6000) });
       if (res.ok) {
-        dot.style.background  = '#5bc47a';
+        dot.style.background = '#5bc47a';
         text.textContent = '已连接 · 每次记账自动同步';
-      } else throw new Error('non-ok');
+      } else {
+        dot.style.background = '#e07070';
+        text.textContent = `连接失败 (HTTP ${res.status})`;
+      }
     } catch {
-      // no-cors下 fetch会opaque response，视为成功
-      dot.style.background  = '#5bc47a';
-      text.textContent = '已启用 · 同步静默进行中';
+      // Network/CORS error — POST sync may still work (no-cors)
+      dot.style.background = '#f0c040';
+      text.textContent = '网络受限 · 记账仍会静默同步';
     }
   },
 
