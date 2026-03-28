@@ -1384,51 +1384,30 @@ canvas#pieChart {
 /* ===== SAVINGS SCREEN ===== */
 #screen-savings .screen-inner {
   position: relative;
-  padding: 16px;
-  background: linear-gradient(180deg, rgba(8, 16, 30, 0.98) 0%, rgba(11, 23, 42, 0.92) 100%);
+  padding: 0;
+  background: #07111f;
   overflow-y: auto;
-  isolation: isolate;
+  -webkit-overflow-scrolling: touch;
 }
 
-#screen-savings .screen-inner::before {
-  content: '';
-  position: absolute;
-  inset: -24px;
-  z-index: -2;
-  background:
-    linear-gradient(180deg, rgba(12, 16, 30, 0.04) 0%, rgba(12, 16, 30, 0.08) 62%, rgba(12, 16, 30, 0.18) 100%),
-    url('../images/savingbackground.png') center 10% / cover no-repeat;
-  filter: none;
-  transform: none;
-  opacity: 1;
-  pointer-events: none;
-}
-
+/* Remove old ghost background — was causing 2-panel split */
+#screen-savings .screen-inner::before,
 #screen-savings .screen-inner::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background:
-    linear-gradient(180deg, rgba(8, 12, 25, 0) 0%, rgba(8, 12, 25, 0.02) 54%, rgba(8, 12, 25, 0.22) 100%);
-  pointer-events: none;
+  display: none;
 }
 
 .savings-jar-hero {
   position: relative;
-  min-height: 320px;
-  border-radius: 28px;
+  /* No border-radius/margin: fills full width, seamless with the rest */
+  width: 100%;
+  min-height: 52vh;
   overflow: hidden;
-  margin-bottom: 18px;
   padding: 22px 20px 18px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  background: #09101d;
-  box-shadow:
-    0 18px 44px rgba(34, 19, 10, 0.1),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  background: #07111f;
 }
 
 .savings-hero-video,
