@@ -1,4 +1,4 @@
-const CACHE_NAME = 'butler-finance-v6';
+const CACHE_NAME = 'butler-finance-v7';
 const BASE_URL = new URL('./', self.location.href);
 const INDEX_URL = new URL('index.html', BASE_URL).toString();
 const APP_SHELL = [
@@ -19,6 +19,7 @@ const APP_SHELL = [
   new URL('images/icons/chart.png', BASE_URL).toString(),
   new URL('images/icons/savings.png', BASE_URL).toString(),
   new URL('images/icons/setting-icon.png', BASE_URL).toString(),
+  new URL('images/wishjarstatic.PNG', BASE_URL).toString(),
 ];
 
 self.addEventListener('install', event => {

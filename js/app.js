@@ -269,6 +269,7 @@ const App = {
       const charVideo = document.getElementById('char-video');
       if (charVideo && charVideo.src && charVideo.paused) charVideo.play().catch(() => {});
       this.cycleGreeting();
+      this.playRandomCharacterVoice();
     }
   },
 
@@ -316,7 +317,7 @@ const App = {
     this._homeVoiceBound = true;
 
     const triggerVoice = () => this.playRandomCharacterVoice();
-    ['layer-char', 'char-video', 'char-video-layer'].forEach(id => {
+    ['layer-char', 'char-video', 'char-video-layer', 'greeting-text'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('click', triggerVoice);
     });
