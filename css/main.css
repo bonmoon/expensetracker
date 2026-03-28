@@ -1473,29 +1473,9 @@ canvas#pieChart {
   content: none;
 }
 
-.savings-jar-trigger:active .jar-img {
-  transform: none;
-}
-
 .savings-jar-trigger:focus-visible {
   outline: 2px solid rgba(255, 226, 166, 0.92);
   outline-offset: 4px;
-}
-
-.jar-img {
-  position: absolute;
-  z-index: 1;
-  display: block;
-  max-width: none;
-  transform: none;
-  animation: none;
-  filter: none;
-  pointer-events: none;
-}
-
-@keyframes jarFloat {
-  0%, 100% { transform: none; }
-  50% { transform: none; }
 }
 
 .goals-empty-state {

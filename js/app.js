@@ -15,8 +15,9 @@ const App = {
   savingsVideoEl: null,
   savingsJarHeroEl: null,
   savingsJarTriggerEl: null,
-  savingsJarImgEl: null,
   _savingsVisibilityBound: false,
+  BGM_SRC: 'voice/bulterbgm.mp3',
+  DEFAULT_BGM_VOLUME: 0.42,
 
   CATEGORIES: [
     { name: '餐饮', emoji: '🍜' },
@@ -37,6 +38,12 @@ const App = {
 
   init() {
     this.registerSW();
+    if (window.AudioManager) {
+      window.AudioManager.init({
+        src: this.BGM_SRC,
+        defaultVolume: this.DEFAULT_BGM_VOLUME,
+      });
+    }
     this.setupLaunchAudio();
     Character.init();
     this.bindCharacterEvents();
@@ -837,7 +844,6 @@ const App = {
     this.savingsVideoEl = document.getElementById('savings-hero-video');
     this.savingsJarHeroEl = document.querySelector('.savings-jar-hero');
     this.savingsJarTriggerEl = document.querySelector('.savings-jar-trigger');
-    this.savingsJarImgEl = this.savingsJarTriggerEl?.querySelector('.jar-img') || null;
     if (this.savingsVideoEl) {
       this.savingsVideoEl.muted = true;
       this.savingsVideoEl.loop = true;
@@ -917,7 +923,7 @@ const App = {
   },
 
   updateSavingsJarOverlay() {
-    if (!this.savingsJarHeroEl || !this.savingsJarTriggerEl || !this.savingsJarImgEl) return;
+    if (!this.savingsJarHeroEl || !this.savingsJarTriggerEl) return;
 
     const heroWidth = this.savingsJarHeroEl.clientWidth;
     const heroHeight = this.savingsJarHeroEl.clientHeight;
@@ -944,11 +950,6 @@ const App = {
     this.savingsJarTriggerEl.style.top = `${top}px`;
     this.savingsJarTriggerEl.style.width = `${width}px`;
     this.savingsJarTriggerEl.style.height = `${height}px`;
-
-    this.savingsJarImgEl.style.width = `${renderedWidth}px`;
-    this.savingsJarImgEl.style.height = `${renderedHeight}px`;
-    this.savingsJarImgEl.style.left = `${-left}px`;
-    this.savingsJarImgEl.style.top = `${-top}px`;
   },
 
   syncSavingsHeroVideoPlayback() {
@@ -1088,8 +1089,36 @@ const App = {
     const sheetsEl = document.getElementById('sheets-url-input');
     if (sheetsEl) sheetsEl.placeholder = Sheets.DEFAULT_URL.substring(0, 50) + '…（已内置）';
 
+    const bgmToggleEl = document.getElementById('bgm-enabled-toggle');
+    if (bgmToggleEl) bgmToggleEl.checked = settings.bgmEnabled !== false;
+
+    const bgmVolume = Number.isFinite(Number(settings.bgmVolume))
+      ? Math.round(Number(settings.bgmVolume) * 100)
+      : Math.round(this.DEFAULT_BGM_VOLUME * 100);
+    const bgmSliderEl = document.getElementById('bgm-volume-slider');
+    if (bgmSliderEl) bgmSliderEl.value = String(bgmVolume);
+    this.updateBGMVolumeLabel(bgmVolume);
+
     // Check sheets status
     this.checkSheetsStatus();
+  },
+
+  toggleBGM(enabled) {
+    DB.saveSetting('bgmEnabled', !!enabled);
+    if (window.AudioManager) window.AudioManager.setBGMEnabled(enabled);
+    this.showToast(enabled ? '背景音乐已开启' : '背景音乐已关闭');
+  },
+
+  setBGMVolume(value) {
+    const percent = Math.max(0, Math.min(100, Number(value) || 0));
+    DB.saveSetting('bgmVolume', percent / 100);
+    this.updateBGMVolumeLabel(percent);
+    if (window.AudioManager) window.AudioManager.setBGMVolume(percent / 100);
+  },
+
+  updateBGMVolumeLabel(percent) {
+    const label = document.getElementById('bgm-volume-value');
+    if (label) label.textContent = `${Math.round(percent)}%`;
   },
 
   onProviderChange() {

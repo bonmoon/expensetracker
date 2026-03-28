@@ -225,9 +225,7 @@
           type="button"
           onclick="App.showDepositModal()"
           aria-label="点击罐子存入或创建储蓄目标"
-        >
-          <img src="images/wishjarstatic.PNG" class="jar-img" alt="">
-        </button>
+        ></button>
       </div>
       <button class="btn-add-goal" onclick="App.showAddGoalModal()">+ 新增储蓄目标</button>
       <div id="goals-list"></div>
@@ -242,6 +240,33 @@
       <h2>设置</h2>
     </div>
     <div class="screen-inner" style="padding:20px;background:linear-gradient(180deg,#f5f6fb,#e6ebf5);overflow-y:auto;">
+
+      <div class="chart-card">
+        <h3>背景音乐</h3>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;font-style:italic;">
+          控制应用内 BGM 的开关与音量，音乐会自动循环播放。
+        </p>
+        <label style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;color:var(--text-primary);font-family:var(--font-body);">
+          <span>开启背景音乐</span>
+          <input id="bgm-enabled-toggle" type="checkbox" onchange="App.toggleBGM(this.checked)">
+        </label>
+        <div style="margin-top:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;">
+            <span style="font-size:13px;color:var(--text-secondary);font-style:italic;">BGM 音量</span>
+            <span id="bgm-volume-value" style="font-size:13px;color:var(--gold-dark);font-family:var(--font-display);">42%</span>
+          </div>
+          <input
+            id="bgm-volume-slider"
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value="42"
+            oninput="App.setBGMVolume(this.value)"
+            style="width:100%;accent-color:var(--gold-dark);"
+          >
+        </div>
+      </div>
 
       <!-- AI 服务商 -->
       <div class="chart-card">
