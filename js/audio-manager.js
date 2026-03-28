@@ -47,6 +47,7 @@ const AudioManager = {
 
     if (src && audio.src !== new URL(src, window.location.href).href) {
       audio.src = src;
+      audio.load();
     }
 
     audio.loop = !!options.loop;
@@ -100,6 +101,11 @@ const AudioManager = {
     this.syncBGM();
   },
 
+  unlockBGM() {
+    this.bgmUnlocked = true;
+    return this.syncBGM();
+  },
+
   setBGMVolume(volume) {
     this.bgmVolume = Math.min(1, Math.max(0, Number(volume) || 0));
     const audio = this.audioInstances.get('bgm-current');
@@ -109,14 +115,14 @@ const AudioManager = {
   syncBGM() {
     if (!this.bgmSource || !this.bgmEnabled || !this.isEnabled) {
       this.stop('bgm-current');
-      return;
+      return Promise.resolve();
     }
 
     const audio = this.getAudio('bgm-current', this.bgmSource, { preload: 'metadata', loop: true });
     audio.volume = this.bgmVolume;
-    if (!this.bgmUnlocked) return;
+    if (!this.bgmUnlocked) return Promise.resolve();
 
-    this.playBGM(this.bgmSource, this.bgmVolume).catch(() => {});
+    return this.playBGM(this.bgmSource, this.bgmVolume).catch(() => {});
   },
 
   stop(id) {

@@ -65,6 +65,11 @@ const App = {
     }
   },
 
+  ensureBGMPlayback() {
+    if (!window.AudioManager) return;
+    window.AudioManager.unlockBGM().catch(() => {});
+  },
+
   registerSW() {
     if ('serviceWorker' in navigator) {
       const swUrl = new URL('sw.js', window.location.href);
@@ -124,6 +129,7 @@ const App = {
 
   beginLaunchSequence() {
     if (this.isLaunchRunning || this.hasLaunchStarted) return;
+    this.ensureBGMPlayback();
 
     const overlay = document.getElementById('launch-overlay');
     const image = document.getElementById('launch-card-image');
@@ -237,6 +243,7 @@ const App = {
   // ===== NAVIGATION =====
   navigate(screenId) {
     const previousScreen = this.currentScreen;
+    this.ensureBGMPlayback();
     const current = document.getElementById(`screen-${previousScreen}`);
     const next = document.getElementById(`screen-${screenId}`);
     if (!next) return;
@@ -924,11 +931,13 @@ const App = {
 
   updateSavingsJarOverlay() {
     if (!this.savingsJarHeroEl || !this.savingsJarTriggerEl) return;
+    this.savingsJarTriggerEl.style.left = '0';
+    this.savingsJarTriggerEl.style.top = '0';
+    this.savingsJarTriggerEl.style.width = '100%';
+    this.savingsJarTriggerEl.style.height = '100%';
+  },
 
-    const heroWidth = this.savingsJarHeroEl.clientWidth;
-    const heroHeight = this.savingsJarHeroEl.clientHeight;
-    if (!heroWidth || !heroHeight) return;
-
+  getSavingsJarHitArea(containerWidth, containerHeight, paddingRatio = 0) {
     const sourceWidth = 510;
     const sourceHeight = 765;
     const bottleX = 241;
@@ -936,20 +945,47 @@ const App = {
     const bottleWidth = 269;
     const bottleHeight = 353;
 
-    const scale = Math.max(heroWidth / sourceWidth, heroHeight / sourceHeight);
+    const scale = Math.max(containerWidth / sourceWidth, containerHeight / sourceHeight);
     const renderedWidth = sourceWidth * scale;
     const renderedHeight = sourceHeight * scale;
-    const offsetX = (heroWidth - renderedWidth) / 2;
-    const offsetY = (heroHeight - renderedHeight) / 2;
+    const offsetX = (containerWidth - renderedWidth) / 2;
+    const offsetY = (containerHeight - renderedHeight) / 2;
     const left = offsetX + bottleX * scale;
     const top = offsetY + bottleY * scale;
     const width = bottleWidth * scale;
     const height = bottleHeight * scale;
+    const padX = width * paddingRatio;
+    const padY = height * paddingRatio;
 
-    this.savingsJarTriggerEl.style.left = `${left}px`;
-    this.savingsJarTriggerEl.style.top = `${top}px`;
-    this.savingsJarTriggerEl.style.width = `${width}px`;
-    this.savingsJarTriggerEl.style.height = `${height}px`;
+    return {
+      left: left - padX,
+      top: top - padY,
+      right: left + width + padX,
+      bottom: top + height + padY,
+    };
+  },
+
+  onSavingsJarTap(event) {
+    this.ensureBGMPlayback();
+
+    if (!this.savingsJarHeroEl) {
+      this.showDepositModal();
+      return;
+    }
+
+    if (!event || typeof event.clientX !== 'number' || typeof event.clientY !== 'number') {
+      this.showDepositModal();
+      return;
+    }
+
+    const rect = this.savingsJarHeroEl.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const hitArea = this.getSavingsJarHitArea(rect.width, rect.height, 0.14);
+
+    if (x >= hitArea.left && x <= hitArea.right && y >= hitArea.top && y <= hitArea.bottom) {
+      this.showDepositModal();
+    }
   },
 
   syncSavingsHeroVideoPlayback() {
@@ -1105,7 +1141,10 @@ const App = {
 
   toggleBGM(enabled) {
     DB.saveSetting('bgmEnabled', !!enabled);
-    if (window.AudioManager) window.AudioManager.setBGMEnabled(enabled);
+    if (window.AudioManager) {
+      if (enabled) this.ensureBGMPlayback();
+      window.AudioManager.setBGMEnabled(enabled);
+    }
     this.showToast(enabled ? '背景音乐已开启' : '背景音乐已关闭');
   },
 
