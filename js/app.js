@@ -16,6 +16,8 @@ const App = {
   savingsJarHeroEl: null,
   savingsJarTriggerEl: null,
   _savingsVisibilityBound: false,
+  _savingsJarTapBound: false,
+  _lastSavingsJarOpenAt: 0,
   BGM_SRC: 'voice/bulterbgm.mp3',
   DEFAULT_BGM_VOLUME: 0.42,
 
@@ -851,6 +853,7 @@ const App = {
     this.savingsVideoEl = document.getElementById('savings-hero-video');
     this.savingsJarHeroEl = document.querySelector('.savings-jar-hero');
     this.savingsJarTriggerEl = document.querySelector('.savings-jar-trigger');
+    this.bindSavingsJarTap();
     if (this.savingsVideoEl) {
       this.savingsVideoEl.muted = true;
       this.savingsVideoEl.loop = true;
@@ -929,6 +932,17 @@ const App = {
     this.savingsVideoEl.pause();
   },
 
+  bindSavingsJarTap() {
+    if (this._savingsJarTapBound || !this.savingsJarTriggerEl) return;
+    this._savingsJarTapBound = true;
+
+    this.savingsJarTriggerEl.addEventListener('pointerup', event => this.onSavingsJarTap(event));
+    this.savingsJarTriggerEl.addEventListener('click', event => this.onSavingsJarTap(event));
+    this.savingsJarTriggerEl.addEventListener('keyup', event => {
+      if (event.key === 'Enter' || event.key === ' ') this.onSavingsJarTap(event);
+    });
+  },
+
   updateSavingsJarOverlay() {
     if (!this.savingsJarHeroEl || !this.savingsJarTriggerEl) return;
     this.savingsJarTriggerEl.style.left = '0';
@@ -965,25 +979,52 @@ const App = {
     };
   },
 
+  getPointFromEvent(event) {
+    if (!event) return null;
+    if (typeof event.clientX === 'number' && typeof event.clientY === 'number') {
+      return { x: event.clientX, y: event.clientY };
+    }
+    const touch = event.changedTouches?.[0] || event.touches?.[0];
+    if (touch && typeof touch.clientX === 'number' && typeof touch.clientY === 'number') {
+      return { x: touch.clientX, y: touch.clientY };
+    }
+    return null;
+  },
+
   onSavingsJarTap(event) {
     this.ensureBGMPlayback();
+    if (event) event.preventDefault();
+
+    const now = Date.now();
+    if (now - this._lastSavingsJarOpenAt < 300) return;
 
     if (!this.savingsJarHeroEl) {
+      this._lastSavingsJarOpenAt = now;
       this.showDepositModal();
       return;
     }
 
-    if (!event || typeof event.clientX !== 'number' || typeof event.clientY !== 'number') {
+    const point = this.getPointFromEvent(event);
+    if (!point) {
+      this._lastSavingsJarOpenAt = now;
       this.showDepositModal();
       return;
     }
 
     const rect = this.savingsJarHeroEl.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const hitArea = this.getSavingsJarHitArea(rect.width, rect.height, 0.14);
+    const x = point.x - rect.left;
+    const y = point.y - rect.top;
+    const hitArea = this.getSavingsJarHitArea(rect.width, rect.height, 0.28);
+    const broadBottleZone = (
+      x >= rect.width * 0.42 &&
+      y >= rect.height * 0.24
+    );
 
-    if (x >= hitArea.left && x <= hitArea.right && y >= hitArea.top && y <= hitArea.bottom) {
+    if (
+      (x >= hitArea.left && x <= hitArea.right && y >= hitArea.top && y <= hitArea.bottom) ||
+      broadBottleZone
+    ) {
+      this._lastSavingsJarOpenAt = now;
       this.showDepositModal();
     }
   },

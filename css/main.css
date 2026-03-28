@@ -1467,6 +1467,8 @@ canvas#pieChart {
   background: transparent;
   cursor: pointer;
   overflow: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .savings-jar-trigger::before {
