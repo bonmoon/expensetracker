@@ -1,10 +1,80 @@
 const Sheets = {
+  REQUEST_TIMEOUT_MS: 8000,
+
   getURL() {
     return (DB.getSettings().sheetsUrl || '').trim();
   },
 
   isConfigured() {
     return !!this.getURL();
+  },
+
+  async fetchWithTimeout(resource, init = {}, timeoutMs = this.REQUEST_TIMEOUT_MS) {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = setTimeout(() => {
+      if (controller) controller.abort();
+    }, timeoutMs);
+
+    try {
+      const request = controller ? { ...init, signal: controller.signal } : init;
+      return await fetch(resource, request);
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        throw new Error('请求超时，请检查 Apps Script 部署或网络');
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
+  },
+
+  async fetchJSON(urls) {
+    const candidates = Array.isArray(urls) ? urls : [urls];
+    let lastError = new Error('请求失败');
+
+    for (const url of candidates) {
+      try {
+        const res = await this.fetchWithTimeout(url, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-store',
+          headers: { 'Accept': 'application/json,text/plain,*/*' },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        return text ? JSON.parse(text) : null;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError;
+  },
+
+  async getRemoteRecords() {
+    const url = this.getURL();
+    if (!url) throw new Error('请先绑定您的 Sheets URL');
+
+    const data = await this.fetchJSON([`${url}?action=getAll`, url]);
+    if (Array.isArray(data)) return DB.dedupeRecords(data);
+    if (Array.isArray(data?.records)) return DB.dedupeRecords(data.records);
+    if (Array.isArray(data?.data)) return DB.dedupeRecords(data.data);
+    throw new Error('Apps Script 返回的数据格式不正确');
+  },
+
+  async ping() {
+    const url = this.getURL();
+    if (!url) return { success: false, message: '未绑定 Sheets URL' };
+
+    try {
+      const data = await this.fetchJSON([`${url}?action=ping`, url]);
+      if (Array.isArray(data) || data?.success === true || typeof data === 'object') {
+        return { success: true };
+      }
+      return { success: false, message: 'Apps Script 响应异常' };
+    } catch (error) {
+      return { success: false, message: error.message || '无法连接 Apps Script' };
+    }
   },
 
   async postAction(action, payload = {}) {
@@ -20,11 +90,11 @@ const Sheets = {
     };
 
     try {
-      const res = await fetch(url, request);
+      const res = await this.fetchWithTimeout(url, request);
       return { success: res.ok, status: res.status };
     } catch {
       try {
-        await fetch(url, { ...request, mode: 'no-cors' });
+        await this.fetchWithTimeout(url, { ...request, mode: 'no-cors' });
         return { success: true, status: 0 };
       } catch (error) {
         return { success: false, message: error.message };
@@ -54,10 +124,7 @@ const Sheets = {
     if (!url) return { success: false, message: '请先绑定您的 Sheets URL' };
 
     try {
-      const res = await fetch(url + '?action=getAll', { mode: 'cors' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const remoteRaw = await res.json();
-      const remote = Array.isArray(remoteRaw) ? DB.dedupeRecords(remoteRaw) : [];
+      const remote = await this.getRemoteRecords();
       const local = DB.getRecords();
 
       const localIds = new Set(local.map(record => record.id).filter(Boolean));
@@ -98,9 +165,7 @@ const Sheets = {
     if (!url) return { success: false, message: '请先绑定您的 Sheets URL' };
 
     try {
-      const res = await fetch(url + '?action=getAll', { mode: 'cors' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await this.getRemoteRecords();
       if (!Array.isArray(data) || !data.length) return { success: false, message: 'Sheets 暂无数据' };
 
       const deletedIds = new Set(DB.getDeletedIds());

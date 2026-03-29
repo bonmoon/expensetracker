@@ -679,22 +679,40 @@ const App = {
   // ===== 从 Sheets 恢复 =====
   async restoreFromSheets() {
     const btn = document.getElementById('btn-restore');
-    if (btn) btn.textContent = '恢复中…';
-    const result = await Sheets.pullAndRestore();
-    if (btn) btn.textContent = '从 Sheets 恢复记录↓';
-    this.showToast(result.message);
-    if (result.success) {
-      this.updateHomeBalance();
-      Charts.init();
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '恢复中…';
+    }
+    try {
+      const result = await Sheets.pullAndRestore();
+      this.showToast(result.message);
+      if (result.success) {
+        this.updateHomeBalance();
+        Charts.init();
+      }
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '从 Sheets 恢复记录↓';
+      }
     }
   },
 
   async syncSheetsChanges() {
     const btn = document.getElementById('btn-sync-sheets');
-    if (btn) btn.textContent = '同步中…';
-    const result = await Sheets.syncChanges();
-    if (btn) btn.textContent = '同步变更到 Sheets';
-    this.showToast(result.message);
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '同步中…';
+    }
+    try {
+      const result = await Sheets.syncChanges();
+      this.showToast(result.message);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '同步变更到 Sheets';
+      }
+    }
   },
 
   // ===== AI CHAT =====
@@ -1302,13 +1320,13 @@ const App = {
     dot.style.background = '#f0c040';
     text.textContent = '连接中…';
     try {
-      const res = await fetch(url + '?action=ping', { mode: 'cors', signal: AbortSignal.timeout(6000) });
-      if (res.ok) {
+      const result = await Sheets.ping();
+      if (result.success) {
         dot.style.background = '#5bc47a';
-        text.textContent = '已连接 · 新增、编辑、删除都会自动同步';
+        text.textContent = '已连接 · 可拉取、同步并自动写入变更';
       } else {
         dot.style.background = '#e07070';
-        text.textContent = `连接失败 (HTTP ${res.status})`;
+        text.textContent = `连接失败 · ${result.message || '请检查 URL、部署权限或网络'}`;
       }
     } catch {
       dot.style.background = '#e07070';
