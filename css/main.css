@@ -516,6 +516,7 @@ body.launch-running .char-glow {
   width: 160px;
   transform: translateX(160px);
   transition: transform 0.25s ease;
+  z-index: 2;
 }
 
 .record-swipe-actions.show {
@@ -536,6 +537,7 @@ body.launch-running .char-glow {
   align-items: center;
   justify-content: center;
   gap: 3px;
+  pointer-events: auto;
 }
 
 .swipe-btn-edit::before { content: '✏️'; font-size: 18px; }
@@ -555,6 +557,7 @@ body.launch-running .char-glow {
   justify-content: center;
   gap: 3px;
   border-radius: 0 12px 12px 0;
+  pointer-events: auto;
 }
 
 .swipe-btn-delete::before { content: '🗑️'; font-size: 18px; }

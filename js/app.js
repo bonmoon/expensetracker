@@ -486,11 +486,28 @@ const App = {
   },
 
   // ===== 编辑记录 =====
-  showEditRecord(id) {
-    const recordId = String(id);
-    const record = DB.getRecords().find(r => String(r.id) === recordId);
+  decodeRecordSignature(signature) {
+    try {
+      return decodeURIComponent(signature || '');
+    } catch {
+      return signature || '';
+    }
+  },
+
+  findRecordByIdentity(id, signature = '') {
+    const recordId = String(id || '');
+    const decodedSignature = this.decodeRecordSignature(signature);
+    return DB.getRecords().find(record => {
+      if (recordId && String(record.id) === recordId) return true;
+      return decodedSignature && DB.recordSignature(record) === decodedSignature;
+    }) || null;
+  },
+
+  showEditRecord(id, signature = '') {
+    const record = this.findRecordByIdentity(id, signature);
     if (!record) return;
-    document.getElementById('edit-record-id').value = recordId;
+    document.getElementById('edit-record-id').value = String(record.id || '');
+    document.getElementById('edit-record-signature').value = encodeURIComponent(DB.recordSignature(record));
     document.getElementById('edit-amount').value = record.amount;
     document.getElementById('edit-note').value = record.note || '';
     document.getElementById('edit-category').value = record.category;
@@ -511,6 +528,7 @@ const App = {
 
   saveEditRecord() {
     const id = String(document.getElementById('edit-record-id').value);
+    const signature = document.getElementById('edit-record-signature').value;
     const amount = parseFloat(document.getElementById('edit-amount').value);
     const note = document.getElementById('edit-note').value.trim();
     const category = document.getElementById('edit-category').value;
@@ -520,7 +538,7 @@ const App = {
     // 找到对应emoji
     const cat = this.CATEGORIES.find(c => c.name === category);
     const emoji = cat ? cat.emoji : '💸';
-    const existing = DB.getRecords().find(r => String(r.id) === id);
+    const existing = this.findRecordByIdentity(id, signature);
     if (!existing) {
       this.showToast('记录不存在');
       return;
@@ -541,7 +559,13 @@ const App = {
 
   deleteRecordFromEdit() {
     const id = String(document.getElementById('edit-record-id').value);
-    DB.deleteRecord(id);
+    const signature = document.getElementById('edit-record-signature').value;
+    const record = this.findRecordByIdentity(id, signature);
+    if (!record) {
+      this.showToast('记录不存在');
+      return;
+    }
+    DB.deleteRecord(record.id);
     this.closeModal('modal-edit-record');
     this.updateHomeBalance();
     Charts.init();
@@ -567,6 +591,19 @@ const App = {
     this.updateHomeBalance();
     Charts.init();
     this.showToast('已删除');
+  },
+
+  deleteRecordByIdentity(id, signature, event) {
+    const record = this.findRecordByIdentity(id, signature);
+    if (!record) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      this.showToast('记录不存在');
+      return;
+    }
+    this.deleteRecord(record.id, event);
   },
 
   // ===== 滑动手势 =====
@@ -633,10 +670,10 @@ const App = {
     if (actions) actions.classList.remove('show');
   },
 
-  openEditFromSwipe(id) {
+  openEditFromSwipe(id, signature = '') {
     // 先收起滑动，等动画结束再开弹窗
     this.closeSwipe(id);
-    setTimeout(() => this.showEditRecord(id), 250);
+    setTimeout(() => this.showEditRecord(id, signature), 250);
   },
 
   // ===== 从 Sheets 恢复 =====

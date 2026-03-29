@@ -166,15 +166,16 @@ const Charts = {
         ${items.map(r => {
           const d = new Date(r.createdAt);
           const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+          const signature = encodeURIComponent(DB.recordSignature(r));
           return `
             <div class="record-swipe-wrapper" id="wrap-${r.id}">
               <div class="record-swipe-actions" id="actions-${r.id}">
-                <button class="swipe-btn-edit" onclick="event.stopPropagation(); App.openEditFromSwipe('${r.id}')">编辑</button>
-                <button class="swipe-btn-delete" onclick="App.deleteRecord('${r.id}', event)">删除</button>
+                <button class="swipe-btn-edit" onclick="event.stopPropagation(); App.openEditFromSwipe('${r.id}', '${signature}')">编辑</button>
+                <button class="swipe-btn-delete" onclick="App.deleteRecordByIdentity('${r.id}', '${signature}', event)">删除</button>
               </div>
               <div class="record-item record-item-swipeable record-item-editable" id="item-${r.id}"
                 data-id="${r.id}"
-                onclick="App.showEditRecord('${r.id}')"
+                onclick="App.showEditRecord('${r.id}', '${signature}')"
                 ontouchstart="App.swipeStart(event,'${r.id}')"
                 ontouchmove="App.swipeMove(event,'${r.id}')"
                 ontouchend="App.swipeEnd(event,'${r.id}')">
