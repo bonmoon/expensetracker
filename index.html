@@ -299,6 +299,9 @@
         </p>
         <input class="note-input" id="sheets-url-input" type="text" placeholder="输入您自己的 Apps Script Web App URL" style="font-size:12px;">
         <button class="btn-submit" onclick="App.saveSheetsUrl()" style="margin-top:8px;font-size:12px;letter-spacing:1px;">保存 URL</button>
+        <button class="btn-submit" onclick="App.syncSheetsChanges()"
+          style="margin-top:8px;width:100%;background:linear-gradient(135deg,#2a5a35,#4a9a60);font-size:12px;letter-spacing:1px;"
+          id="btn-sync-sheets">同步变更到 Sheets</button>
         <button class="btn-submit" onclick="App.restoreFromSheets()"
           style="margin-top:8px;width:100%;background:linear-gradient(135deg,#1a3a5a,#2a6a9a);font-size:12px;letter-spacing:1px;"
           id="btn-restore">从 Sheets 恢复记录↓</button>

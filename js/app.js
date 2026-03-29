@@ -487,9 +487,10 @@ const App = {
 
   // ===== 编辑记录 =====
   showEditRecord(id) {
-    const record = DB.getRecords().find(r => r.id === id);
+    const recordId = String(id);
+    const record = DB.getRecords().find(r => String(r.id) === recordId);
     if (!record) return;
-    document.getElementById('edit-record-id').value = id;
+    document.getElementById('edit-record-id').value = recordId;
     document.getElementById('edit-amount').value = record.amount;
     document.getElementById('edit-note').value = record.note || '';
     document.getElementById('edit-category').value = record.category;
@@ -509,7 +510,7 @@ const App = {
   },
 
   saveEditRecord() {
-    const id = document.getElementById('edit-record-id').value;
+    const id = String(document.getElementById('edit-record-id').value);
     const amount = parseFloat(document.getElementById('edit-amount').value);
     const note = document.getElementById('edit-note').value.trim();
     const category = document.getElementById('edit-category').value;
@@ -519,7 +520,7 @@ const App = {
     // 找到对应emoji
     const cat = this.CATEGORIES.find(c => c.name === category);
     const emoji = cat ? cat.emoji : '💸';
-    const existing = DB.getRecords().find(r => r.id === id);
+    const existing = DB.getRecords().find(r => String(r.id) === id);
     if (!existing) {
       this.showToast('记录不存在');
       return;
@@ -539,7 +540,7 @@ const App = {
   },
 
   deleteRecordFromEdit() {
-    const id = document.getElementById('edit-record-id').value;
+    const id = String(document.getElementById('edit-record-id').value);
     DB.deleteRecord(id);
     this.closeModal('modal-edit-record');
     this.updateHomeBalance();
@@ -548,10 +549,15 @@ const App = {
   },
 
   // 直接从列表删除（滑动后点删除按钮）
-  deleteRecord(id) {
-    DB.deleteRecord(id);
+  deleteRecord(id, event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const recordId = String(id);
+    DB.deleteRecord(recordId);
     // 移除DOM元素
-    const wrap = document.getElementById(`wrap-${id}`);
+    const wrap = document.getElementById(`wrap-${recordId}`);
     if (wrap) {
       wrap.style.transition = 'opacity 0.3s, max-height 0.3s';
       wrap.style.opacity = '0';
@@ -644,6 +650,14 @@ const App = {
       this.updateHomeBalance();
       Charts.init();
     }
+  },
+
+  async syncSheetsChanges() {
+    const btn = document.getElementById('btn-sync-sheets');
+    if (btn) btn.textContent = '同步中…';
+    const result = await Sheets.syncChanges();
+    if (btn) btn.textContent = '同步变更到 Sheets';
+    this.showToast(result.message);
   },
 
   // ===== AI CHAT =====

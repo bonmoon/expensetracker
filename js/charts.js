@@ -169,8 +169,8 @@ const Charts = {
           return `
             <div class="record-swipe-wrapper" id="wrap-${r.id}">
               <div class="record-swipe-actions" id="actions-${r.id}">
-                <button class="swipe-btn-edit" onclick="App.openEditFromSwipe('${r.id}')">编辑</button>
-                <button class="swipe-btn-delete" onclick="App.deleteRecord('${r.id}')">删除</button>
+                <button class="swipe-btn-edit" onclick="event.stopPropagation(); App.openEditFromSwipe('${r.id}')">编辑</button>
+                <button class="swipe-btn-delete" onclick="App.deleteRecord('${r.id}', event)">删除</button>
               </div>
               <div class="record-item record-item-swipeable record-item-editable" id="item-${r.id}"
                 data-id="${r.id}"

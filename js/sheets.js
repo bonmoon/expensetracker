@@ -49,6 +49,50 @@ const Sheets = {
     await this.postAction('deleteRecord', { id });
   },
 
+  async syncChanges() {
+    const url = this.getURL();
+    if (!url) return { success: false, message: '请先绑定您的 Sheets URL' };
+
+    try {
+      const res = await fetch(url + '?action=getAll', { mode: 'cors' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const remoteRaw = await res.json();
+      const remote = Array.isArray(remoteRaw) ? DB.dedupeRecords(remoteRaw) : [];
+      const local = DB.getRecords();
+
+      const localIds = new Set(local.map(record => record.id).filter(Boolean));
+      const deletedIds = new Set(DB.getDeletedIds());
+
+      const toDelete = remote
+        .filter(record => record.id && (!localIds.has(record.id) || deletedIds.has(record.id)))
+        .map(record => record.id);
+
+      const remoteIds = new Set(remote.map(record => record.id).filter(Boolean));
+      const toAdd = local.filter(record => record.id && !remoteIds.has(record.id));
+
+      let deletedCount = 0;
+      for (const id of toDelete) {
+        await this.deleteRecord(id);
+        deletedCount++;
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      let addedCount = 0;
+      for (const record of toAdd) {
+        await this.pushRecord(record);
+        addedCount++;
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      if (!deletedCount && !addedCount) {
+        return { success: true, message: 'Sheets 已与本地一致' };
+      }
+      return { success: true, message: `已同步 ${addedCount} 条新增，删除 ${deletedCount} 条远端记录` };
+    } catch (error) {
+      return { success: false, message: `同步失败: ${error.message}` };
+    }
+  },
+
   async pullAndRestore() {
     const url = this.getURL();
     if (!url) return { success: false, message: '请先绑定您的 Sheets URL' };

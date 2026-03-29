@@ -6,12 +6,15 @@ const DB = {
   KEY_SETTINGS: 'butler_settings',
 
   getRecords() {
-    try { return JSON.parse(localStorage.getItem(this.KEY_RECORDS)) || []; }
+    try {
+      const records = JSON.parse(localStorage.getItem(this.KEY_RECORDS)) || [];
+      return records.map(record => this.normalizeRecord(record)).filter(Boolean);
+    }
     catch { return []; }
   },
 
   getDeletedIds() {
-    try { return JSON.parse(localStorage.getItem(this.KEY_DELETED)) || []; }
+    try { return (JSON.parse(localStorage.getItem(this.KEY_DELETED)) || []).map(String); }
     catch { return []; }
   },
 
@@ -24,6 +27,7 @@ const DB = {
     if (!record) return null;
     return {
       ...record,
+      id: record.id != null ? String(record.id) : '',
       amount: Number(record.amount || 0),
       note: record.note || '',
       emoji: record.emoji || '',
@@ -83,28 +87,30 @@ const DB = {
   },
 
   updateRecord(id, updates) {
+    const targetId = String(id);
     let updatedRecord = null;
     const records = this.getRecords().map(record => {
-      if (record.id !== id) return record;
+      if (String(record.id) !== targetId) return record;
       updatedRecord = { ...record, ...updates };
       return updatedRecord;
     });
     if (!updatedRecord) return null;
 
     localStorage.setItem(this.KEY_RECORDS, JSON.stringify(this.dedupeRecords(records)));
-    if (window.Sheets) Sheets.replaceRecord(updatedRecord);
+    if (window.Sheets) Sheets.replaceRecord(this.normalizeRecord(updatedRecord));
     return updatedRecord;
   },
 
   deleteRecord(id) {
-    const existing = this.getRecords().find(r => r.id === id);
+    const targetId = String(id);
+    const existing = this.getRecords().find(r => String(r.id) === targetId);
     // 从本地移除
-    const records = this.getRecords().filter(r => r.id !== id);
+    const records = this.getRecords().filter(r => String(r.id) !== targetId);
     localStorage.setItem(this.KEY_RECORDS, JSON.stringify(records));
     // 记入黑名单
     const deleted = this.getDeletedIds();
-    if (!deleted.includes(id)) {
-      deleted.push(id);
+    if (!deleted.includes(targetId)) {
+      deleted.push(targetId);
       localStorage.setItem(this.KEY_DELETED, JSON.stringify(deleted));
     }
     if (existing) {
@@ -116,7 +122,7 @@ const DB = {
       }
     }
     // 同步删除到Sheets
-    if (window.Sheets) Sheets.deleteRecord(id);
+    if (window.Sheets) Sheets.deleteRecord(targetId);
   },
 
   getGoals() {
