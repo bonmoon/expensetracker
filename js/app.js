@@ -18,7 +18,7 @@ const App = {
   _savingsVisibilityBound: false,
   _savingsJarTapBound: false,
   _lastSavingsJarOpenAt: 0,
-  BGM_SRC: 'voice/bulterbgm.mp3',
+  BGM_SRC: 'voice/Moonlight Ledger.mp3',
   DEFAULT_BGM_VOLUME: 0.42,
 
   CATEGORIES: [
@@ -758,6 +758,24 @@ const App = {
     this.addButlerMessage(Character.getWelcomeMessage());
   },
 
+  encodeAIRecordPayload(records) {
+    try {
+      return encodeURIComponent(JSON.stringify(records));
+    } catch {
+      return '';
+    }
+  },
+
+  decodeAIRecordPayload(payload) {
+    if (!payload) return [];
+    try {
+      const parsed = JSON.parse(decodeURIComponent(payload));
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  },
+
   addButlerMessage(text, recordData = null) {
     const el = document.getElementById('chat-messages');
     if (!el) return;
@@ -769,26 +787,36 @@ const App = {
         ${text}
     `;
 
-    if (recordData && recordData.understood) {
-      const dateLabel = recordData.date && recordData.date !== new Date().toISOString().split('T')[0]
-        ? `<div style="font-size:11px;color:var(--gold);margin-top:3px;font-family:var(--font-display);letter-spacing:1px;">📅 ${recordData.date}</div>`
-        : '';
-      html += `
-        <div class="chat-record-preview">
-          <div class="record-preview-info">
-            <div>${recordData.emoji} ${recordData.category}</div>
-            <div style="font-size:12px;color:#aaa;margin-top:2px;">${recordData.note || ''}</div>
-            ${dateLabel}
-          </div>
-          <div>
-            <div class="record-preview-amount ${recordData.type}">
-              ${recordData.type==='expense'?'-':'+'}¥${recordData.amount}
+    const records = Array.isArray(recordData?.records)
+      ? recordData.records.filter(record => record && Number.isFinite(Number(record.amount)))
+      : [];
+
+    if (recordData && recordData.understood && records.length) {
+      const today = new Date().toISOString().split('T')[0];
+      const previews = records.map(record => {
+        const dateLabel = record.date && record.date !== today
+          ? `<div style="font-size:11px;color:var(--gold);margin-top:3px;font-family:var(--font-display);letter-spacing:1px;">📅 ${record.date}</div>`
+          : '';
+        return `
+          <div class="chat-record-preview">
+            <div class="record-preview-info">
+              <div>${record.emoji} ${record.category}</div>
+              <div style="font-size:12px;color:#aaa;margin-top:2px;">${record.note || ''}</div>
+              ${dateLabel}
             </div>
-            <button class="btn-confirm-record" onclick="App.confirmAIRecord(${JSON.stringify(recordData).replace(/"/g,'&quot;')})">
-              确认记录
-            </button>
+            <div class="record-preview-amount ${record.type}">
+              ${record.type==='expense'?'-':'+'}¥${record.amount}
+            </div>
           </div>
-        </div>
+        `;
+      }).join('');
+
+      const payload = this.encodeAIRecordPayload(records);
+      html += `
+        <div class="chat-record-preview-list">${previews}</div>
+        <button class="btn-confirm-record" onclick="App.confirmAIRecords('${payload}')">
+          确认记录 ${records.length} 笔
+        </button>
       `;
     }
 
@@ -851,25 +879,33 @@ const App = {
     this.saveChatHistory();
   },
 
-  confirmAIRecord(data) {
-    const record = {
-      type: data.type,
-      amount: parseFloat(data.amount),
-      category: data.category,
-      emoji: data.emoji,
-      note: data.note || ''
-    };
-    // 如果AI解析出了日期，传入
-    if (data.date) record.date = data.date;
+  confirmAIRecords(payload) {
+    const records = this.decodeAIRecordPayload(payload);
+    if (!records.length) {
+      this.showToast('没有可确认的记录');
+      return;
+    }
 
-    DB.saveRecord(record);
+    const savedRecords = records.map(data => {
+      const record = {
+        type: data.type,
+        amount: parseFloat(data.amount),
+        category: data.category,
+        emoji: data.emoji,
+        note: data.note || ''
+      };
+      if (data.date) record.date = data.date;
+      return DB.saveRecord(record);
+    });
+
     this.updateHomeBalance();
     this.playRandomCharacterVoice();
-    // 触发主页台词（回主页时）
-    setTimeout(() => this.triggerEventQuote(record.type, parseFloat(data.amount)), 100);
+    const latestRecord = savedRecords[0];
+    if (latestRecord) {
+      setTimeout(() => this.triggerEventQuote(latestRecord.type, parseFloat(latestRecord.amount)), 100);
+    }
 
-    const dateStr = data.date ? `（${data.date}）` : '';
-    this.addButlerMessage(`已为主人记录在册${dateStr}。✓`);
+    this.addButlerMessage(`已为主人记录 ${savedRecords.length} 笔收支。✓`);
     document.querySelectorAll('.btn-confirm-record').forEach(b => b.remove());
   },
 

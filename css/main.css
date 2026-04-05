@@ -1102,6 +1102,13 @@ body.launch-running .char-glow {
   align-items: center;
 }
 
+.chat-record-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .record-preview-info { font-size: 13px; color: var(--parchment); }
 .record-preview-amount { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
 .record-preview-amount.expense { color: #e07070; }

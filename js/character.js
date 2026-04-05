@@ -35,7 +35,7 @@ const CHARACTER_CONFIG = {
     },
     audio: {
       launch: 'voice/applaunch.mp3',
-      bgm: 'voice/bulterbgm.mp3',
+      bgm: 'voice/Moonlight Ledger.mp3',
       voiceLines: [
         'voice/英文1.mp3',
         'voice/英文2.mp3',
@@ -102,7 +102,7 @@ const CHARACTER_CONFIG = {
     },
     audio: {
       launch: '',
-      bgm: 'voice/bulterbgm.mp3',
+      bgm: 'voice/Moonlight Ledger.mp3',
       voiceLines: [],
     },
     quotes: {

@@ -42,7 +42,10 @@ ${records}
 ====================
 
 【记账模式】用户描述新收支 → 返回JSON：
-{"mode":"record","type":"expense或income","amount":数字,"category":类别,"emoji":emoji,"note":备注,"date":"YYYY-MM-DD","understood":true,"reply":"管家回复≤30字"}
+{"mode":"record","records":[{"type":"expense或income","amount":数字,"category":类别,"emoji":emoji,"note":备注,"date":"YYYY-MM-DD"}],"understood":true,"reply":"管家回复≤30字"}
+
+如果一句话里包含多笔收支，必须把每一笔都拆成 records 数组中的一项。
+如果只有一笔，也仍然返回 records 数组，长度为 1。
 
 日期：今天=${today} 昨天=${yesterday} 前天=${dayBefore} 本周一=${thisMondayStr}
 
@@ -104,16 +107,60 @@ ${records}
     if (!apiKey) return { understood: false, reply: '主人，请先在设置中配置 AI API Key。' };
     try {
       switch (provider) {
-        case 'deepseek':   return await this.callOpenAICompatible('https://api.deepseek.com/v1/chat/completions', apiKey, 'deepseek-chat', userMessage, history);
-        case 'openrouter': return await this.callOpenAICompatible('https://openrouter.ai/api/v1/chat/completions', apiKey, settings.openrouterModel||'deepseek/deepseek-chat', userMessage, history);
-        case 'groq':       return await this.callOpenAICompatible('https://api.groq.com/openai/v1/chat/completions', apiKey, 'llama3-8b-8192', userMessage, history);
+        case 'deepseek':
+          return this.normalizeResult(await this.callOpenAICompatible('https://api.deepseek.com/v1/chat/completions', apiKey, 'deepseek-chat', userMessage, history));
+        case 'openrouter':
+          return this.normalizeResult(await this.callOpenAICompatible('https://openrouter.ai/api/v1/chat/completions', apiKey, settings.openrouterModel||'deepseek/deepseek-chat', userMessage, history));
+        case 'groq':
+          return this.normalizeResult(await this.callOpenAICompatible('https://api.groq.com/openai/v1/chat/completions', apiKey, 'llama3-8b-8192', userMessage, history));
         case 'gemini':
-        default:           return await this.callGemini(apiKey, userMessage, history);
+        default:
+          return this.normalizeResult(await this.callGemini(apiKey, userMessage, history));
       }
     } catch(e) {
       console.error('AI error:', e);
       return { understood: false, reply: `执事暂时无法连线。(${e.message})` };
     }
+  },
+
+  normalizeResult(result = {}) {
+    if (!result || typeof result !== 'object') return { understood: false, reply: '执事暂时没能听清，请再说一次。' };
+
+    if (Array.isArray(result.records)) {
+      const records = result.records
+        .map(record => this.normalizeRecord(record))
+        .filter(Boolean);
+      return {
+        ...result,
+        mode: result.mode || (records.length ? 'record' : 'chat'),
+        understood: records.length ? true : !!result.understood,
+        records,
+      };
+    }
+
+    const singleRecord = this.normalizeRecord(result);
+    if (result.mode === 'record' && singleRecord) {
+      return {
+        ...result,
+        understood: true,
+        records: [singleRecord],
+      };
+    }
+
+    return result;
+  },
+
+  normalizeRecord(record = {}) {
+    const amount = Number(record.amount);
+    if (!record.type || !Number.isFinite(amount) || amount <= 0) return null;
+    return {
+      type: record.type === 'income' ? 'income' : 'expense',
+      amount,
+      category: record.category || '其他',
+      emoji: record.emoji || (record.type === 'income' ? '💰' : '💸'),
+      note: record.note || '',
+      date: record.date || '',
+    };
   }
 };
 window.AI = AI;
